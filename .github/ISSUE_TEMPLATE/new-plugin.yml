@@ -1,0 +1,30 @@
+---
+name: New capability plugin
+title: "[plugin] "
+labels: ["plugin", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Propose a new plugin under `plugins/<plugin_id>/` (add a row to `registry/plugins.yaml`).
+  - type: input
+    id: plugin_id
+    attributes:
+      label: Plugin id (kebab-case)
+      placeholder: e.g. api-design-review
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What capability does this add? Who is it for?
+    validations:
+      required: true
+  - type: textarea
+    id: risk
+    attributes:
+      label: Risk / data handling
+      description: Secrets, PII, regulated environments, or destructive recommendations?
+    validations:
+      required: true
