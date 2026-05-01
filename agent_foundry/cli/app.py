@@ -1,0 +1,93 @@
+"""argparse wiring and CLI entrypoint."""
+
+from __future__ import annotations
+
+import argparse
+
+from agent_foundry.cli.handlers import (
+    add_install_scope_arguments,
+    handle_create_plugin,
+    handle_install,
+    handle_remove_plugin,
+    handle_uninstall,
+    handle_validate_plugins,
+    providers_help_sentence,
+)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    provider_help = f"Target tool: {providers_help_sentence()}."
+    plugin_help = "Plugin id from registry/plugins.yaml (e.g. development)."
+
+    parser = argparse.ArgumentParser(
+        prog="agent-foundry",
+        description="Install, validate, scaffold, or manage agent-foundry registry plugins.",
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    p_install = sub.add_parser(
+        "install",
+        help="Install a registry plugin for a provider.",
+    )
+    p_install.add_argument("provider", help=provider_help)
+    p_install.add_argument("plugin", help=plugin_help)
+    add_install_scope_arguments(p_install)
+    p_install.set_defaults(handler=handle_install, scope="global")
+
+    p_uninstall = sub.add_parser(
+        "uninstall",
+        help="Remove a registry plugin installation for a provider.",
+    )
+    p_uninstall.add_argument("provider", help=provider_help)
+    p_uninstall.add_argument("plugin", help=plugin_help)
+    add_install_scope_arguments(p_uninstall)
+    p_uninstall.set_defaults(handler=handle_uninstall, scope="global")
+
+    p_validate = sub.add_parser(
+        "validate-plugins",
+        help="Validate registry/plugins.yaml and all plugin manifests.",
+    )
+    p_validate.set_defaults(handler=handle_validate_plugins)
+
+    p_create = sub.add_parser(
+        "create-plugin",
+        help="Create a new plugin directory and append it to the registry.",
+    )
+    p_create.add_argument(
+        "name",
+        metavar="PLUGIN_ID",
+        help="Plugin id (lowercase kebab-case, e.g. my-plugin).",
+    )
+    p_create.add_argument(
+        "--version",
+        default="0.1.0",
+        help="Initial semver for manifests and registry (default: 0.1.0).",
+    )
+    p_create.add_argument(
+        "--summary",
+        default=None,
+        help="Short description stored in manifests and registry (default: placeholder).",
+    )
+    p_create.set_defaults(handler=handle_create_plugin)
+
+    p_remove = sub.add_parser(
+        "remove-plugin",
+        help=(
+            "Drop a plugin from registry/plugins.yaml and delete plugins/<PLUGIN_ID>/."
+        ),
+    )
+    p_remove.add_argument(
+        "name",
+        metavar="PLUGIN_ID",
+        help="Registered plugin id to remove.",
+    )
+    p_remove.set_defaults(handler=handle_remove_plugin)
+
+    return parser
+
+
+def main() -> None:
+    parser = build_parser()
+    args = parser.parse_args()
+    code = args.handler(args)
+    raise SystemExit(code)

@@ -6,7 +6,3 @@ plugins:
   path: plugins/development
   version: 1.0.0
   summary: TypeScript + Fastify backend engineer agent and backend-focused skills
-- id: my-plugin
-  path: plugins/my-plugin
-  version: 0.1.0
-  summary: Does X for Y

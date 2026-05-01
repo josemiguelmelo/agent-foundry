@@ -1,0 +1,22 @@
+name: Validate registry
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install CLI
+        run: pip install -e .
+      - name: CLI help
+        run: agent-foundry --help
+      - name: Validate plugins
+        run: agent-foundry validate-plugins
