@@ -1,0 +1,3 @@
+name: git
+version: 0.1.0
+description: Git workflow plugin with skills for commit quality, branch creation, and PR opening.

@@ -6,3 +6,7 @@ plugins:
   path: plugins/development
   version: 1.0.0
   summary: TypeScript + Fastify backend engineer agent and backend-focused skills
+- id: git
+  path: plugins/git
+  version: 0.1.0
+  summary: Git workflow plugin with skills for commit quality, branch creation, and PR opening
