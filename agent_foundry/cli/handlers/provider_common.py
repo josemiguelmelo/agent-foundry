@@ -3,7 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import os
+import shutil
+import subprocess
 import sys
+import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 from agent_foundry.core.errors import AgentFoundryError, UsageError
@@ -13,6 +18,8 @@ from agent_foundry.plugin.types import Plugin
 from agent_foundry.registry import resolve_plugin_dir
 
 from agent_foundry.cli.exit_codes import RUNTIME_FAILURE, SUCCESS, USAGE_OR_VALIDATION
+
+DEFAULT_REPOSITORY_URL = "https://github.com/josemiguelmelo/agent-foundry.git"
 
 
 def providers_help_sentence() -> str:
@@ -50,6 +57,61 @@ def _ensure_resolved_plugin(plugin: str) -> int | Path:
     except FileNotFoundError as e:
         print(e, file=sys.stderr)
         return USAGE_OR_VALIDATION
+
+
+@contextmanager
+def _with_agent_foundry_repo(repo_root: Path):
+    old = os.environ.get("AGENT_FOUNDRY_REPO")
+    os.environ["AGENT_FOUNDRY_REPO"] = str(repo_root)
+    try:
+        yield
+    finally:
+        if old is None:
+            os.environ.pop("AGENT_FOUNDRY_REPO", None)
+        else:
+            os.environ["AGENT_FOUNDRY_REPO"] = old
+
+
+@contextmanager
+def _install_repo_context(args: argparse.Namespace):
+    """Resolve repo source for install: local override or remote git clone."""
+    repo_arg = getattr(args, "repo", None)
+    if repo_arg:
+        repo_root = Path(str(repo_arg)).expanduser().resolve()
+        if not repo_root.is_dir():
+            raise FileNotFoundError(f"--repo path is not a directory: {repo_root}")
+        registry_path = repo_root / "registry" / "plugins.yaml"
+        if not registry_path.is_file():
+            raise FileNotFoundError(
+                f"--repo does not contain registry/plugins.yaml: {registry_path}"
+            )
+        with _with_agent_foundry_repo(repo_root):
+            yield
+        return
+
+    git_bin = shutil.which("git")
+    if git_bin:
+        with tempfile.TemporaryDirectory(prefix="agent-foundry-repo-") as tmpdir:
+            clone_root = Path(tmpdir) / "repo"
+            result = subprocess.run(
+                [git_bin, "clone", "--depth", "1", DEFAULT_REPOSITORY_URL, str(clone_root)],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            if result.returncode == 0:
+                with _with_agent_foundry_repo(clone_root):
+                    yield
+                return
+            print(
+                "Warning: could not fetch repository from git; falling back to local lookup.",
+                file=sys.stderr,
+            )
+            stderr = (result.stderr or "").strip()
+            if stderr:
+                print(stderr, file=sys.stderr)
+
+    yield
 
 
 def _validate_plugin_id(plugin: str) -> int | None:
@@ -90,10 +152,15 @@ def run_provider_operation(
 
     root: Path | None = None
     if not uninstall:
-        resolved = _ensure_resolved_plugin(args.plugin)
-        if isinstance(resolved, int):
-            return resolved
-        root = resolved
+        try:
+            with _install_repo_context(args):
+                resolved = _ensure_resolved_plugin(args.plugin)
+                if isinstance(resolved, int):
+                    return resolved
+                root = resolved
+        except FileNotFoundError as e:
+            print(e, file=sys.stderr)
+            return USAGE_OR_VALIDATION
 
     ctx = ProviderContext(
         plugin_id=args.plugin, plugin_root=root, in_project=in_project

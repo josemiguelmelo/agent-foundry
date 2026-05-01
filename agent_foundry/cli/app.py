@@ -31,6 +31,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_install.add_argument("provider", help=provider_help)
     p_install.add_argument("plugin", help=plugin_help)
+    p_install.add_argument(
+        "--repo",
+        help=(
+            "Path to a local agent-foundry repository root. "
+            "If omitted, install fetches the default git repository first."
+        ),
+    )
     add_install_scope_arguments(p_install)
     p_install.set_defaults(handler=handle_install, scope="global")
 
