@@ -12,7 +12,5 @@
   ],
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
-  "agents": [
-    "./agents/default.md"
-  ]
+  "agents": []
 }
