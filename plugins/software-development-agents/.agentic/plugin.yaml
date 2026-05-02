@@ -1,0 +1,4 @@
+name: software-development-agents
+version: "1.0.0"
+description: >
+  Multi-role software development team: AI, frontend, backend, architecture, and product management agents with per-project memory.

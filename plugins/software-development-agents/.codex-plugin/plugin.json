@@ -1,0 +1,22 @@
+{
+  "name": "software-development-agents",
+  "version": "1.0.0",
+  "description": "Software development team agents: AI, frontend, backend, architecture, and product management with per-project memory.",
+  "author": {
+    "name": "agent-foundry"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "software-development",
+    "team",
+    "architecture",
+    "product",
+    "frontend",
+    "backend",
+    "ai",
+    "agent-foundry"
+  ],
+  "agents": "./agents",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

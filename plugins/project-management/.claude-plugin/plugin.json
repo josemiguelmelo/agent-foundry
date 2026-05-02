@@ -1,0 +1,17 @@
+{
+  "name": "project-management",
+  "version": "1.0.0",
+  "description": "Project management skills for structured issues and tasks with consistent markdown output.",
+  "author": { "name": "agent-foundry" },
+  "keywords": [
+    "project-management",
+    "issues",
+    "tasks",
+    "backlog",
+    "agent-foundry"
+  ],
+  "license": "Apache-2.0",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "agents": []
+}
