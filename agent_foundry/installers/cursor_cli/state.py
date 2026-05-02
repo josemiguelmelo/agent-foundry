@@ -95,3 +95,16 @@ def agent_install_allowed(plugin_id: str, dest: Path, old_state_paths: set[str])
     if key in old_state_paths:
         return True
     return agent_managed_by_plugin(plugin_id, dest)
+
+
+def agent_collision_detail(dest: Path) -> str:
+    """Explain why ``dest`` cannot be overwritten without ``--force``."""
+    if dest.is_symlink():
+        return "path is a symlink"
+    if not dest.is_file():
+        return "path exists but is not a regular agent file"
+    fm, _ = split_frontmatter_for_rewrite(dest.read_text(encoding="utf-8"))
+    pid = fm.get(FRONTMATTER_PLUGIN_KEY)
+    if isinstance(pid, str) and pid.strip():
+        return f"owned by cursor-cli plugin {pid!r}"
+    return "no agent-foundry ownership marker (manual file or other tool)"

@@ -17,7 +17,9 @@ from .manifest import (
 )
 from .rewrite import iter_agent_sources, iter_skill_package_dirs, rewrite_agent_for_cli
 from .state import (
+    agent_collision_detail,
     agent_install_allowed,
+    agent_managed_by_plugin,
     cursor_cli_state_dir,
     load_state,
     skill_install_allowed,
@@ -28,7 +30,11 @@ from .state import (
 
 
 def install_cursor_cli(
-    plugin_id: str, plugin_root: Path, *, in_project: bool = False
+    plugin_id: str,
+    plugin_root: Path,
+    *,
+    in_project: bool = False,
+    force: bool = False,
 ) -> None:
     """Mirror skills/agents into Cursor CLI discovery paths (global ``~/.cursor/`` or project ``./.cursor/``)."""
     state_anchor = Path.cwd().resolve() if in_project else None
@@ -55,11 +61,19 @@ def install_cursor_cli(
 
     for rel in skill_roots:
         skills_src = resolve_from_plugin_root(plugin_root, rel)
-        packages = iter_skill_package_dirs(skills_src)
-        if skills_src.exists() and not packages:
-            raise RuntimeError(
-                f"Cursor CLI: skills path {skills_src} has no SKILL.md folders (check .cursor-plugin paths)."
+        if not skills_src.exists():
+            print(
+                f"Cursor CLI: skills path does not exist, skipping: {skills_src}",
+                file=sys.stderr,
             )
+            continue
+        packages = iter_skill_package_dirs(skills_src)
+        if not packages:
+            print(
+                f"Cursor CLI: skipping skills path {skills_src} (no SKILL.md packages).",
+                file=sys.stderr,
+            )
+            continue
         for pkg in packages:
             folder_name = pkg.name
             dest = cursor_skills / folder_name
@@ -81,29 +95,48 @@ def install_cursor_cli(
     for rel in agent_roots:
         agents_src = resolve_from_plugin_root(plugin_root, rel)
         if not agents_src.exists():
-            raise RuntimeError(f"Cursor CLI: agents path does not exist: {agents_src}")
+            print(
+                f"Cursor CLI: agents path does not exist, skipping: {agents_src}",
+                file=sys.stderr,
+            )
+            continue
         sources = iter_agent_sources(agents_src)
         if not sources:
-            raise RuntimeError(f"Cursor CLI: no *.md agents under {agents_src}")
+            print(
+                f"Cursor CLI: skipping agents path {agents_src} (no *.md agent files).",
+                file=sys.stderr,
+            )
+            continue
 
         for src in sources:
-            dest_name = f"{plugin_id}__{src.stem}.md"
+            dest_name = f"{src.stem}.md"
             dest = cursor_agents / dest_name
             dest_key = str(dest.resolve())
             if dest.exists() or dest.is_symlink():
-                if not agent_install_allowed(plugin_id, dest, old_agents):
+                allowed = agent_install_allowed(plugin_id, dest, old_agents)
+                if not allowed and not force:
+                    detail = agent_collision_detail(dest)
                     raise RuntimeError(
                         "Cursor CLI: refusing to overwrite existing agent "
-                        f"{dest_name!r} at {dest} (not managed by "
-                        f"agent-foundry cursor-cli for plugin {plugin_id!r})."
+                        f"{dest_name!r} at {dest} ({detail}). "
+                        "Re-run with --force to replace it."
                     )
                 unlink_or_rmtree(dest)
             dest.write_text(rewrite_agent_for_cli(plugin_id, src), encoding="utf-8")
             recorded_agents.append(dest_key)
 
+    recorded_paths = {str(Path(p).resolve()) for p in recorded_agents}
+    for old_key in old_agents:
+        if old_key in recorded_paths:
+            continue
+        legacy = Path(old_key)
+        if legacy.is_file() and agent_managed_by_plugin(plugin_id, legacy):
+            unlink_or_rmtree(legacy)
+
     if not recorded_skills and not recorded_agents:
         raise RuntimeError(
-            "Cursor CLI: nothing to install — add `skills` and/or `agents` paths to "
+            "Cursor CLI: nothing to install — add at least one skill package or "
+            f"agent `.md` under `skills` / `agents` paths in "
             f"{plugin_root / CURSOR_MANIFEST_SUBPATH}"
         )
 

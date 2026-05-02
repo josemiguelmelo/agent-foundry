@@ -32,6 +32,7 @@ class ProviderContext:
     plugin_id: str
     plugin_root: Path | None
     in_project: bool
+    force: bool = False
 
 
 class ProviderContract(Protocol):

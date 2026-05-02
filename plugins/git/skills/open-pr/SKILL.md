@@ -35,6 +35,7 @@ description: >
 - Do not fabricate test results; mark unknown checks as TODO.
 - Avoid overly long PR descriptions; prioritize reviewer clarity.
 - Do not push or create PR if user has not requested execution.
+- Do not include "Made with Cursor" or similar in the PR body.
 
 ## Output format
 

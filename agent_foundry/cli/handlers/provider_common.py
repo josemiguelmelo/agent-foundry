@@ -163,7 +163,10 @@ def run_provider_operation(
             return USAGE_OR_VALIDATION
 
     ctx = ProviderContext(
-        plugin_id=args.plugin, plugin_root=root, in_project=in_project
+        plugin_id=args.plugin,
+        plugin_root=root,
+        in_project=in_project,
+        force=bool(getattr(args, "force", False)),
     )
 
     try:

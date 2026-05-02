@@ -34,6 +34,7 @@ description: >
 - Never amend/rewrite history unless explicitly requested.
 - If hooks fail, fix and create a new commit rather than force-skipping checks.
 - Prefer small focused commits over large mixed commits.
+- Do not include "Made with Cursor" or similar in the message.
 
 ## Output format
 

@@ -43,7 +43,15 @@ class Provider:
             raise RuntimeError(
                 f"Provider {self.name!r}: install requires plugin_root in context."
             )
-        self.install_fn(ctx.plugin_id, ctx.plugin_root, in_project=ctx.in_project)
+        if self.name == "cursor-cli":
+            self.install_fn(
+                ctx.plugin_id,
+                ctx.plugin_root,
+                in_project=ctx.in_project,
+                force=ctx.force,
+            )
+        else:
+            self.install_fn(ctx.plugin_id, ctx.plugin_root, in_project=ctx.in_project)
 
     def uninstall(self, ctx: ProviderContext) -> None:
         self.uninstall_fn(ctx.plugin_id, in_project=ctx.in_project)

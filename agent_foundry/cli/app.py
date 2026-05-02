@@ -39,6 +39,14 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     add_install_scope_arguments(p_install)
+    p_install.add_argument(
+        "--force",
+        action="store_true",
+        help=(
+            "Cursor CLI only: overwrite existing agent files in ~/.cursor/agents that "
+            "belong to another install or were not created by agent-foundry."
+        ),
+    )
     p_install.set_defaults(handler=handle_install, scope="global")
 
     p_uninstall = sub.add_parser(

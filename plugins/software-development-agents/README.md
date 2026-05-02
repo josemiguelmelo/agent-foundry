@@ -1,6 +1,6 @@
 # software-development-agents
 
-Specialized **agents** for a software team (AI, frontend, backend, architecture, product management) with **per-project memory** under `.agent-foundry/memory/software-development-agents/<agent-name>/` in each workspace.
+Specialized **agents** for a software team (AI, frontend, backend, architecture, product management) with **per-project memory** under `.agent-foundry/memory/software-development-agents/<agent-name>/` in each workspace. For **parallel feature work**, the architect and team loop standardize **git worktrees** (one branch and checkout path per track).
 
 | Provider | Manifest |
 |----------|----------|

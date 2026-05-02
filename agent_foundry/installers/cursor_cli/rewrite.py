@@ -40,7 +40,6 @@ def rewrite_agent_for_cli(plugin_id: str, src_md: Path) -> str:
     raw = src_md.read_text(encoding="utf-8")
     fm, body = split_frontmatter_for_rewrite(raw)
     stem = src_md.stem
-    prefixed_name = f"{plugin_id}__{stem}"
-    fm["name"] = prefixed_name
+    fm["name"] = stem
     fm[FRONTMATTER_PLUGIN_KEY] = plugin_id
     return assemble_frontmatter_markdown(fm, body)
