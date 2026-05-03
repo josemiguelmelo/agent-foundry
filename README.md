@@ -68,7 +68,7 @@ agent-foundry uninstall codex <plugin_id> --in-project
 
 | Provider | `--in-project` behavior |
 | --- | --- |
-| `cursor` | `./.cursor/plugins/local/<plugin_id>/` |
+| `cursor` | Same as `cursor-cli`: `./.cursor/skills/`, `./.cursor/agents/`, state under `./.agent-foundry/cursor-cli/` (the IDE does not load `./.cursor/plugins/local/` in projects) |
 | `cursor-cli` | `./.cursor/` plus state under `./.agent-foundry/cursor-cli/` |
 | `codex` | `./.codex/plugins/` and `./.agents/plugins/marketplace.json` |
 | `copilot` | Not supported (user scope only) |
