@@ -43,7 +43,7 @@ class Provider:
             raise RuntimeError(
                 f"Provider {self.name!r}: install requires plugin_root in context."
             )
-        if self.name == "cursor-cli":
+        if self.name in ("cursor-cli", "cursor"):
             self.install_fn(
                 ctx.plugin_id,
                 ctx.plugin_root,
