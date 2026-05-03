@@ -10,7 +10,6 @@ from agent_foundry.utils.fsutil import prune_empty_parents, unlink_or_rmtree
 from agent_foundry.utils.paths import install_base as cli_install_base
 
 from .manifest import (
-    CURSOR_MANIFEST_SUBPATH,
     load_cursor_plugin_manifest,
     manifest_path_values,
     resolve_from_plugin_root,
@@ -136,8 +135,8 @@ def install_cursor_cli(
     if not recorded_skills and not recorded_agents:
         raise RuntimeError(
             "Cursor CLI: nothing to install — add at least one skill package or "
-            f"agent `.md` under `skills` / `agents` paths in "
-            f"{plugin_root / CURSOR_MANIFEST_SUBPATH}"
+            f"agent `.md` under the `skills` / `agents` paths declared in the plugin "
+            f"manifest under {plugin_root.resolve()}."
         )
 
     write_state(

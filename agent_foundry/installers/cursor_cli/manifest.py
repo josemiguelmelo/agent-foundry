@@ -8,6 +8,14 @@ from typing import Any
 
 CURSOR_MANIFEST_SUBPATH = Path(".cursor-plugin") / "plugin.json"
 
+# When installing from a shallow clone or an older registry snapshot, the Cursor-specific
+# manifest may be absent even though Claude/root manifests list the same skill paths.
+_MANIFEST_CANDIDATES: tuple[Path, ...] = (
+    CURSOR_MANIFEST_SUBPATH,
+    Path(".claude-plugin") / "plugin.json",
+    Path("plugin.json"),
+)
+
 
 def manifest_path_values(raw: Any) -> list[Path]:
     if isinstance(raw, str) and raw.strip():
@@ -18,16 +26,23 @@ def manifest_path_values(raw: Any) -> list[Path]:
 
 
 def load_cursor_plugin_manifest(plugin_root: Path) -> dict[str, Any]:
-    mpath = plugin_root / CURSOR_MANIFEST_SUBPATH
-    if not mpath.is_file():
-        raise RuntimeError(
-            f"Missing Cursor manifest: {mpath} (expected under plugin root)."
-        )
-    try:
-        data = json.loads(mpath.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
-        raise RuntimeError(f"Invalid Cursor plugin JSON {mpath}: {e}") from e
-    return data if isinstance(data, dict) else {}
+    root = plugin_root.resolve()
+    tried: list[Path] = []
+    for rel in _MANIFEST_CANDIDATES:
+        mpath = root / rel
+        tried.append(mpath)
+        if not mpath.is_file():
+            continue
+        try:
+            data = json.loads(mpath.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            raise RuntimeError(f"Invalid plugin JSON {mpath}: {e}") from e
+        return data if isinstance(data, dict) else {}
+    raise RuntimeError(
+        "Missing plugin manifest for Cursor CLI install; tried:\n  "
+        + "\n  ".join(str(p) for p in tried)
+        + "\nAt least one of these JSON files must exist under the plugin root."
+    )
 
 
 def resolve_from_plugin_root(plugin_root: Path, rel: Path) -> Path:

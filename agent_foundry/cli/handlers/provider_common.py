@@ -150,30 +150,31 @@ def run_provider_operation(
             file=sys.stderr,
         )
 
-    root: Path | None = None
-    if not uninstall:
-        try:
+    force = bool(getattr(args, "force", False))
+
+    try:
+        if uninstall:
+            ctx = ProviderContext(
+                plugin_id=args.plugin,
+                plugin_root=None,
+                in_project=in_project,
+                force=force,
+            )
+            ops.uninstall(ctx)
+        else:
+            # Keep cloned (--repo remote) or env-scoped repo alive until install finishes;
+            # ``TemporaryDirectory`` deletes the tree when the context exits.
             with _install_repo_context(args):
                 resolved = _ensure_resolved_plugin(args.plugin)
                 if isinstance(resolved, int):
                     return resolved
-                root = resolved
-        except FileNotFoundError as e:
-            print(e, file=sys.stderr)
-            return USAGE_OR_VALIDATION
-
-    ctx = ProviderContext(
-        plugin_id=args.plugin,
-        plugin_root=root,
-        in_project=in_project,
-        force=bool(getattr(args, "force", False)),
-    )
-
-    try:
-        if uninstall:
-            ops.uninstall(ctx)
-        else:
-            ops.install(ctx)
+                ctx = ProviderContext(
+                    plugin_id=args.plugin,
+                    plugin_root=resolved,
+                    in_project=in_project,
+                    force=force,
+                )
+                ops.install(ctx)
     except FileNotFoundError as e:
         print(e, file=sys.stderr)
         return USAGE_OR_VALIDATION
