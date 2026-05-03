@@ -3,13 +3,15 @@ name: create-issue
 description: >
   Create an issue using a fixed markdown template (description body), then open it on GitHub via
   gh (optional GitHub Project), GitLab via glab, or Jira via MCP tools only if a Jira MCP server is
-  available.
+  available. Supports optional blocked-by dependencies (GitHub issue numbers and/or delivery-plan
+  task IDs) rendered in the Dependencies section.
 ---
 
 ## When to use
 
 - The user wants a **tracked issue** created with consistent structure, not only a draft.
 - Target is one of: **GitHub** (CLI + optional Project), **GitLab** (CLI), or **Jira** (MCP).
+- The user wants **dependencies** recorded (**blocked by** other issues, delivery-plan task IDs, or prose).
 
 ## Target system (pick one per run)
 
@@ -26,11 +28,21 @@ description: >
 3. **Summary** / **Problem** — per template below.
 4. **Acceptance criteria** — at least one testable item.
 
+**Optional**
+
+5. **`labels`** (GitHub / when supported elsewhere) — exact names as on the tracker; omit if none.
+
+6. **`blocked_by`** — blockers before this work can start:
+   - **GitHub issue numbers** (e.g. `[2, 4]` or `[123]`) → render as `- #2`, `- #4` (same repo unless the user specifies full URLs for cross-repo links).
+   - **Delivery-plan task IDs** (e.g. `["0.1", "1.2"]`) → render as `- Task 0.1`, `- Task 1.2` (placeholders until matching issues exist; user can edit in links later).
+
+If the user describes dependencies only in prose, still fold them into **Dependencies** (and use **Blocked by** bullets when the references are clearly issue numbers or task IDs).
+
 Plus **target-specific** requirements:
 
 | System | Extra                                                                                                                                 |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| GitHub | Repo (`owner/name`) if not obvious from context; optional **GitHub Project** id/number + owner (org or user) for `gh project` linkage |
+| GitHub | Repo (`owner/name`) if not obvious from context; optional **labels** (must exist on the repo); optional **GitHub Project** id/number + owner (org or user) for `gh project` linkage |
 | GitLab | Path or group/project if not inferred from remote                                                                                     |
 | Jira   | **Project key** (e.g. `PROJ`), **issue type** (Task/Bug/Story, …) per instance                                                        |
 
@@ -89,7 +101,16 @@ Build the issue **description** from this markdown template (exact section title
 
 ## Dependencies
 
-<!-- Omit section if empty. -->
+<!-- Omit the whole section if there are no dependencies and no blocked_by. -->
+
+### Blocked by
+
+<!-- Present when blocked_by or explicit blockers are provided; omit subsection if empty. -->
+
+- #<issue_number>
+- Task <task_id>
+
+<!-- Other dependency notes (external systems, teams, vendor timelines, …). Omit if none. -->
 
 …
 ```
@@ -98,9 +119,21 @@ Save the filled template (minus the leading `# <title>` duplicate if the CLI set
 
 **Recommendation:** CLI `--title` = same string as `<title>` in template; **body** starts at `## Metadata` through end (or include `# title` once in body only if the team wants it—stay consistent per repo).
 
+### Building **Dependencies** / **Blocked by**
+
+When `blocked_by` is provided (or the user lists blockers):
+
+1. Include a **Dependencies** section.
+2. Under **`### Blocked by`**, add one bullet per item:
+   - **Numeric issue refs** → `- #123` (GitHub cross-links in the same repo).
+   - **Task IDs** (strings like `0.1`, `1.2`) → `- Task 0.1`, etc.
+3. Append any free-form dependency notes after **Blocked by** (or in place of **Blocked by** if only prose was given).
+4. If **Blocked by** would be empty but **Dependencies** has other content only, omit the **Blocked by** subsection.
+5. If there are no dependencies at all, omit the entire **Dependencies** section.
+
 ## Workflow
 
-1. Gather inputs and build the markdown body (file or here-doc).
+1. Gather inputs; resolve **`blocked_by`** into the **Dependencies** → **Blocked by** bullets as above; build the markdown body (file or here-doc).
 2. Route by target:
 
 ### A. GitHub (`gh`)
@@ -119,6 +152,8 @@ Save the filled template (minus the leading `# <title>` duplicate if the CLI set
   gh issue create --repo OWNER/REPO --title "TITLE" --body-file /path/to/body.md
   ```
 
+- If the user supplied **labels**, add one `--label NAME` per label (invalid or missing labels can cause create to fail).
+
 - Capture the **issue URL** from command output.
 
 **GitHub Project (optional)**
@@ -132,6 +167,8 @@ Save the filled template (minus the leading `# <title>` duplicate if the CLI set
   ```
 
   Use `gh project --help` / `gh project item-add --help` for the exact flags supported by the installed `gh` version. If linking fails, report the issue URL and the project linkage error; do not claim project linkage succeeded.
+
+- The GitHub API / `gh issue create` path does not assign a **project column**. After creation, if the team uses a board workflow, tell the user to open the issue (or project board) and move it to **To Do** when needed, or rely on project automation if configured.
 
 ### B. GitLab (`glab`)
 
@@ -187,3 +224,8 @@ Save the filled template (minus the leading `# <title>` duplicate if the CLI set
 - Never pass secrets into issue text; never echo tokens.
 - Do not claim success if the CLI or MCP returned an error—surface stderr / tool error.
 - Do not fall back from Jira to “markdown only” unless the user explicitly asks for a draft after MCP is missing.
+
+## Delivery-plan / PR linkage (GitHub)
+
+- When issues represent delivery-plan tasks, create the issue **before** work that will open a PR; the PR body should use `Closes #<issue_number>` (or equivalent) so merge associates with and can close the issue.
+- **Blocked by** task IDs in the body document logical dependencies; replace or augment with `#issue` links once those tasks have issue numbers.
