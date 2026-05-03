@@ -2,21 +2,17 @@
 
 registry_version: 1.0.0
 plugins:
-- id: development
-  path: plugins/development
-  version: 1.0.0
-  summary: TypeScript + Fastify backend engineer agent and backend-focused skills
-- id: git
-  path: plugins/git
-  version: 0.1.0
-  summary: Git workflow plugin with skills for commit quality, branch creation, and PR opening
-- id: software-development-agents
-  path: plugins/software-development-agents
-  version: 1.0.0
-  summary: >
-    Multi-role software development team agents (AI, frontend, backend, architect, product manager)
-    with per-project memory
-- id: project-management
-  path: plugins/project-management
-  version: 1.0.0
-  summary: Project management skills for structured issues and tasks with markdown templates
+  - id: git
+    path: plugins/git
+    version: 0.1.0
+    summary: Git workflow plugin with skills for commit quality, branch creation, and PR opening
+  - id: software-development-agents
+    path: plugins/software-development-agents
+    version: 1.0.0
+    summary: >
+      Multi-role software development team agents (AI, frontend, backend, architect, product manager)
+      with per-project memory
+  - id: project-management
+    path: plugins/project-management
+    version: 1.0.0
+    summary: Project management skills for structured issues and tasks with markdown templates
