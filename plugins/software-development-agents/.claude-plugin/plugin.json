@@ -19,7 +19,7 @@
     "./agents/senior-ai-engineer.md",
     "./agents/senior-frontend-engineer.md",
     "./agents/senior-backend-engineer.md",
-    "./agents/senior-architect.md",
+    "./agents/senior-software-architect.md",
     "./agents/senior-product-manager.md"
   ],
   "mcpServers": "./.mcp.json"
