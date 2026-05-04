@@ -62,7 +62,7 @@ PROVIDERS: dict[str, Provider] = {
         "claude",
         install_claude,
         uninstall_claude,
-        capabilities=ProviderCapabilities(in_project=InProjectBehavior.IGNORED),
+        capabilities=ProviderCapabilities(in_project=InProjectBehavior.SUPPORTED),
         scaffold_manifest_path=".claude-plugin/plugin.json",
         scaffold_agents_mode=AgentReferenceMode.SINGLE_FILE,
     ),
