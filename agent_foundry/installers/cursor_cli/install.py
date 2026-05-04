@@ -21,6 +21,7 @@ from .state import (
     agent_managed_by_plugin,
     cursor_cli_state_dir,
     load_state,
+    resolve_state_path,
     skill_install_allowed,
     state_path_for,
     write_skill_sentinel,
@@ -42,12 +43,12 @@ def install_cursor_cli(
     agent_roots = manifest_path_values(manifest.get("agents"))
 
     old = load_state(plugin_id, state_anchor) or {}
-    old_skills: set[str] = set(old.get("skills") or [])
-    old_agents: set[str] = set(old.get("agents") or [])
-    if isinstance(old.get("skills"), list):
-        old_skills = {str(x) for x in old["skills"]}
-    if isinstance(old.get("agents"), list):
-        old_agents = {str(x) for x in old["agents"]}
+    old_skills = {
+        resolve_state_path(str(x), state_anchor) for x in (old.get("skills") or [])
+    }
+    old_agents = {
+        resolve_state_path(str(x), state_anchor) for x in (old.get("agents") or [])
+    }
 
     base = cli_install_base(in_project=in_project)
     cursor_skills = base / ".cursor" / "skills"
@@ -170,12 +171,12 @@ def uninstall_cursor_cli(plugin_id: str, *, in_project: bool = False) -> None:
         return
 
     for p in state.get("skills") or []:
-        target = Path(str(p))
+        target = Path(resolve_state_path(str(p), state_anchor))
         if unlink_or_rmtree(target):
             print(f"Cursor CLI: removed skill dir {target}", file=sys.stderr)
 
     for p in state.get("agents") or []:
-        target = Path(str(p))
+        target = Path(resolve_state_path(str(p), state_anchor))
         if unlink_or_rmtree(target):
             print(f"Cursor CLI: removed agent file {target}", file=sys.stderr)
 

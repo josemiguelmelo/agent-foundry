@@ -12,16 +12,57 @@ SCHEMA_VERSION = 1
 CURSOR_CLI_STATE_DIRNAME = "cursor-cli"
 SENTINEL_NAME = ".agent-foundry-cursor-cli.json"
 FRONTMATTER_PLUGIN_KEY = "x-agent-foundry-plugin"
+_AGENT_FOUNDRY_DIRNAME = ".agent-foundry"
+_AGENT_FOUNDRY_GITIGNORE = (
+    "# Local agent-foundry data (not portable)\n"
+    "memory/\n"
+)
 
 
 def cursor_cli_state_dir(project_root: Path | None = None) -> Path:
     if project_root is None:
-        return Path.home() / ".agent-foundry" / CURSOR_CLI_STATE_DIRNAME
-    return project_root.resolve() / ".agent-foundry" / CURSOR_CLI_STATE_DIRNAME
+        return Path.home() / _AGENT_FOUNDRY_DIRNAME / CURSOR_CLI_STATE_DIRNAME
+    return project_root.resolve() / _AGENT_FOUNDRY_DIRNAME / CURSOR_CLI_STATE_DIRNAME
 
 
 def state_path_for(plugin_id: str, project_root: Path | None = None) -> Path:
     return cursor_cli_state_dir(project_root) / f"{plugin_id}.json"
+
+
+def resolve_state_path(path_str: str, project_root: Path | None) -> str:
+    """Resolve a path from install state (relative to project or absolute)."""
+    path = Path(path_str)
+    if project_root is not None and not path.is_absolute():
+        return str((project_root.resolve() / path).resolve())
+    return str(path.expanduser().resolve())
+
+
+def ensure_agent_foundry_gitignore(project_root: Path) -> None:
+    """Ensure ``.agent-foundry/.gitignore`` ignores local data such as ``memory/``."""
+    root = project_root.resolve()
+    agent_foundry = root / _AGENT_FOUNDRY_DIRNAME
+    agent_foundry.mkdir(parents=True, exist_ok=True)
+    gitignore = agent_foundry / ".gitignore"
+    if not gitignore.is_file():
+        gitignore.write_text(_AGENT_FOUNDRY_GITIGNORE, encoding="utf-8")
+        return
+    text = gitignore.read_text(encoding="utf-8")
+    if "memory/" in text:
+        return
+    sep = "" if text.endswith("\n") else "\n"
+    gitignore.write_text(f"{text}{sep}memory/\n", encoding="utf-8")
+
+
+def _paths_for_project_state_json(paths: list[str], project_root: Path) -> list[str]:
+    root = project_root.resolve()
+    out: list[str] = []
+    for p in paths:
+        ap = Path(p).resolve()
+        try:
+            out.append(ap.relative_to(root).as_posix())
+        except ValueError:
+            out.append(str(ap))
+    return sorted(set(out))
 
 
 def load_state(plugin_id: str, project_root: Path | None = None) -> dict[str, Any] | None:
@@ -42,11 +83,19 @@ def write_state(
     agents: list[str],
     project_root: Path | None = None,
 ) -> None:
+    if project_root is not None:
+        root = project_root.resolve()
+        skill_paths = _paths_for_project_state_json(skills, root)
+        agent_paths = _paths_for_project_state_json(agents, root)
+        ensure_agent_foundry_gitignore(root)
+    else:
+        skill_paths = sorted(set(skills))
+        agent_paths = sorted(set(agents))
     payload = {
         "schema_version": SCHEMA_VERSION,
         "plugin_id": plugin_id,
-        "skills": sorted(set(skills)),
-        "agents": sorted(set(agents)),
+        "skills": skill_paths,
+        "agents": agent_paths,
     }
     sp = state_path_for(plugin_id, project_root)
     sp.parent.mkdir(parents=True, exist_ok=True)
