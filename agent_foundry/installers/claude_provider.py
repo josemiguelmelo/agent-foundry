@@ -19,14 +19,21 @@ from agent_foundry.registry import (
     get_registry_plugin,
     repository_root,
 )
+from agent_foundry.utils.paths import install_base
 
-# Synthetic marketplace under ~/.agent-foundry/ (repo need not ship marketplace.json).
+# Synthetic marketplace bundles (repo need not ship marketplace.json).
+# User vs project use different marketplace ids so both can be registered in Claude CLI.
 CLAUDE_CLI_MARKETPLACE_NAME = "agent-foundry-local"
+CLAUDE_CLI_MARKETPLACE_NAME_PROJECT = "agent-foundry-project"
 CLAUDE_CLI_BUNDLE_SEGMENTS = (".agent-foundry", "claude-marketplace", "local-bundle")
 
 
-def _claude_bundle_root() -> Path:
-    return Path.home().joinpath(*CLAUDE_CLI_BUNDLE_SEGMENTS)
+def _claude_marketplace_name(*, in_project: bool) -> str:
+    return CLAUDE_CLI_MARKETPLACE_NAME_PROJECT if in_project else CLAUDE_CLI_MARKETPLACE_NAME
+
+
+def _claude_bundle_root(*, in_project: bool) -> Path:
+    return install_base(in_project=in_project).joinpath(*CLAUDE_CLI_BUNDLE_SEGMENTS)
 
 
 def _upsert_claude_cli_marketplace_manifest(
@@ -35,12 +42,13 @@ def _upsert_claude_cli_marketplace_manifest(
     *,
     version: str,
     description: str,
+    marketplace_name: str,
 ) -> None:
     meta_dir = bundle_root / ".claude-plugin"
     meta_dir.mkdir(parents=True, exist_ok=True)
     mpath = meta_dir / "marketplace.json"
     catalog = read_json_dict_or_default(mpath, {})
-    catalog["name"] = CLAUDE_CLI_MARKETPLACE_NAME
+    catalog["name"] = marketplace_name
     catalog.setdefault("owner", {"name": "agent-foundry-cli"})
     plugins_list = ensure_plugins_list(catalog)
     new_entry = {
@@ -57,7 +65,6 @@ def _upsert_claude_cli_marketplace_manifest(
 
 def install_claude(plugin_id: str, plugin_root: Path, *, in_project: bool = False) -> None:
     """Copy bundle, register marketplace via CLI, ``claude plugin install``."""
-    _ = in_project
     reg = find_registry_file()
     repo_root = repository_root(reg)
     expected = (repo_root / "plugins" / plugin_id).resolve()
@@ -79,7 +86,8 @@ def install_claude(plugin_id: str, plugin_root: Path, *, in_project: bool = Fals
     version = entry.version or "0.0.0"
     description = entry.summary or f"agent-foundry plugin {plugin_id}"
 
-    bundle_root = _claude_bundle_root()
+    marketplace_name = _claude_marketplace_name(in_project=in_project)
+    bundle_root = _claude_bundle_root(in_project=in_project)
     plugin_copy = bundle_root / "plugins" / plugin_id
     replace_copytree(plugin_root.resolve(), plugin_copy)
     _upsert_claude_cli_marketplace_manifest(
@@ -87,6 +95,7 @@ def install_claude(plugin_id: str, plugin_root: Path, *, in_project: bool = Fals
         plugin_id,
         version=version,
         description=description,
+        marketplace_name=marketplace_name,
     )
 
     bundle_str = str(bundle_root.resolve())
@@ -103,32 +112,42 @@ def install_claude(plugin_id: str, plugin_root: Path, *, in_project: bool = Fals
                 f"  claude plugin marketplace add {bundle_str}"
             )
 
-    spec = f"{plugin_id}@{CLAUDE_CLI_MARKETPLACE_NAME}"
-    r_inst = run_command([claude, "plugin", "install", spec], check=False)
+    spec = f"{plugin_id}@{marketplace_name}"
+    install_cmd = [claude, "plugin", "install", spec]
+    if in_project:
+        install_cmd.extend(["--scope", "project"])
+    r_inst = run_command(install_cmd, check=False)
     print(r_inst.stdout, end="")
     print(r_inst.stderr, end="", file=sys.stderr)
     if r_inst.returncode != 0:
+        scope_hint = " --scope project" if in_project else ""
         raise RuntimeError(
             "claude plugin install failed. Check Claude's stderr above. Common fixes:\n"
             f"  claude plugin marketplace list\n"
-            f"  claude plugin marketplace remove {CLAUDE_CLI_MARKETPLACE_NAME}   # if stale\n"
+            f"  claude plugin marketplace remove {marketplace_name}   # if stale\n"
             f"  claude plugin marketplace add {bundle_str}\n"
-            f"  claude plugin install {spec}\n"
+            f"  claude plugin install {spec}{scope_hint}\n"
             "Or bypass the marketplace: "
             f"claude --plugin-dir {plugin_root.resolve()}"
         )
+    scope_note = (
+        " (project scope → .claude/settings.json)" if in_project else " (user scope)"
+    )
     print(
-        f"Claude Code: marketplace {CLAUDE_CLI_MARKETPLACE_NAME!r} → {bundle_root}",
+        f"Claude Code: marketplace {marketplace_name!r} → {bundle_root}{scope_note}",
         file=sys.stderr,
     )
 
 
 def uninstall_claude(plugin_id: str, *, in_project: bool = False) -> None:
-    _ = in_project
+    marketplace_name = _claude_marketplace_name(in_project=in_project)
     claude_bin = which_cmd("claude")
-    spec = f"{plugin_id}@{CLAUDE_CLI_MARKETPLACE_NAME}"
+    spec = f"{plugin_id}@{marketplace_name}"
     if claude_bin:
-        r = run_command([claude_bin, "plugin", "uninstall", spec], check=False)
+        uninstall_cmd = [claude_bin, "plugin", "uninstall", spec]
+        if in_project:
+            uninstall_cmd.extend(["--scope", "project"])
+        r = run_command(uninstall_cmd, check=False)
         if r.stdout:
             print(r.stdout, end="")
         if r.stderr:
@@ -145,6 +164,9 @@ def uninstall_claude(plugin_id: str, *, in_project: bool = False) -> None:
             "Claude Code CLI not on PATH; skipping `claude plugin uninstall`.",
             file=sys.stderr,
         )
+
+    if in_project:
+        return
 
     legacy_root = Path.home() / ".agent-foundry" / "claude-marketplace" / "agent-foundry"
     plugin_link = legacy_root / "plugins" / plugin_id
