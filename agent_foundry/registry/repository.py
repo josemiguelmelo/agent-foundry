@@ -54,7 +54,7 @@ class RegistrySession(AbstractContextManager["RegistrySession"]):
             save_document(self._repository.registry_path, self._data)
             self._dirty = False
 
-    def __exit__(self, exc_type, exc, exc_tb) -> bool | None:
+    def __exit__(self, exc_type, exc, _exc_tb) -> bool | None:
         if exc_type is None:
             self.commit()
         return None

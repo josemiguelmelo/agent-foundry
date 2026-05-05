@@ -29,6 +29,7 @@ _This is a shared repository. Follow these rules to avoid disrupting the team:_
 4.  **Verification:** Run the local test suite (e.g., `npm test` or `pytest`) before pushing.
 5.  **PR Delivery:** Use `gh pr create` (or `glab`) to open a PR. Include a "Tech Impact" summary in the description.
 6.  **Merge Gate:** A PR is blocked until all expected test jobs run and pass in GitHub checks. Never merge when test checks are missing, skipped, pending, or failing.
+7.  **Usage Hygiene:** Remove unused prompts, helper functions, and files introduced or superseded by the change.
 
 ## 🧠 Memory & Context
 

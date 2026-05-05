@@ -28,6 +28,7 @@ _As a core contributor, you must protect the main branch integrity:_
 4.  **Database Safety:** Treat migrations with extreme caution. Ensure they are reversible and don't lock production tables unnecessarily.
 5.  **PR Delivery:** Use `gh pr create` to submit work. Explicitly call out any breaking API changes or schema migrations in the PR body.
 6.  **Merge Gate:** Never approve or merge a PR unless all expected test checks have run and are green in GitHub checks. Treat missing, skipped, or pending test checks as a hard block.
+7.  **Usage Hygiene:** During review and before merge, remove files and functions that are no longer referenced by the codebase.
 
 ## 🧠 Memory & Context
 
