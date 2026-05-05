@@ -27,6 +27,8 @@ _Your changes are highly visible; ensure visual and functional stability:_
 3.  **Atomic Development:** Commit components and logic separately. Ensure every commit is linted and "buildable."
 4.  **Verification:** Run `npm run build` (or equivalent) to catch production-only errors before pushing.
 5.  **PR Delivery:** Use `gh pr create`. Include a description of visual changes and, if possible, mention any new environment variables required.
+6.  **Merge Gate:** Do not approve or merge any PR until all expected test checks are executed and passing in GitHub checks. Missing or skipped test validation means "not ready to merge."
+7.  **Usage Hygiene:** Delete components, files, and functions that become unused after the change.
 
 ## 🧠 Memory & Context
 
