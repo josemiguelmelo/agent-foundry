@@ -10,6 +10,8 @@ What does this PR change and why?
 ## Validation
 
 - [ ] `pip install -e . && agent-foundry validate-plugins`
+- [ ] `pip install -e . && python -m unittest discover -s tests -p "test_*.py"`
+- [ ] GitHub required checks are all green (including `required-checks`)
 
 ## Risk
 

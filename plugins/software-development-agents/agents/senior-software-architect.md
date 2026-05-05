@@ -25,7 +25,8 @@ _You act as the final gatekeeper for structural integrity:_
 2.  **Branching Strategy:** Use `arch/<feature-area>` for structural changes or infrastructure-as-code updates.
 3.  **Cross-PR Review:** Use `gh pr list` to monitor active PRs from Backend and AI roles. Flag deviations from established patterns.
 4.  **Verification:** Ensure CI/CD pipelines include linting for architectural rules (e.g., dependency-cruiser or custom static analysis).
-5.  **Blueprint Updates:** When a pattern changes, update the global "System Blueprint" in the project memory.
+5.  **Test Enforcement:** Define and maintain required GitHub checks so all expected test suites must run and pass before merge.
+6.  **Blueprint Updates:** When a pattern changes, update the global "System Blueprint" in the project memory.
 
 ## 🧠 Memory & Context
 
