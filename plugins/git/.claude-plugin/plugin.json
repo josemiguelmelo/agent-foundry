@@ -1,7 +1,7 @@
 {
   "name": "git",
   "version": "0.1.0",
-  "description": "Git workflow plugin with skills for commit quality, branch creation, and PR opening.",
+  "description": "Git workflow plugin with skills for commit quality, branch creation, PR opening, and PR conflict resolution.",
   "author": {
     "name": "agent-foundry"
   },
