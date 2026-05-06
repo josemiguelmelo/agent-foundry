@@ -71,7 +71,7 @@ agent-foundry uninstall codex <plugin_id> --in-project
 | `cursor` | Same as `cursor-cli`: `./.cursor/skills/`, `./.cursor/agents/`, state under `./.agent-foundry/cursor-cli/` (the IDE does not load `./.cursor/plugins/local/` in projects) |
 | `cursor-cli` | `./.cursor/` plus state under `./.agent-foundry/cursor-cli/` |
 | `codex` | `./.codex/plugins/` and `./.agents/plugins/marketplace.json` |
-| `copilot` | Not supported (user scope only) |
+| `copilot` | Mirrors plugin kinds into project paths: `./.github/skills/`, `./.github/agents/`, and `./.claude/commands/` |
 | `claude` | No effect — installs stay under `~/.agent-foundry/...` |
 
 ## Repository Commands

@@ -79,7 +79,7 @@ PROVIDERS: dict[str, Provider] = {
         install_copilot,
         uninstall_copilot,
         capabilities=ProviderCapabilities(
-            in_project=InProjectBehavior.UNSUPPORTED, required_commands=("copilot",)
+            in_project=InProjectBehavior.SUPPORTED, required_commands=("copilot",)
         ),
         scaffold_manifest_path="plugin.json",
         scaffold_agents_mode=AgentReferenceMode.SINGLE_FILE,
