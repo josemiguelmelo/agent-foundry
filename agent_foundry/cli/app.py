@@ -8,8 +8,10 @@ from agent_foundry.cli.handlers import (
     add_install_scope_arguments,
     handle_create_plugin,
     handle_install,
+    handle_install_specific,
     handle_remove_plugin,
     handle_uninstall,
+    handle_uninstall_specific,
     handle_validate_plugins,
     providers_help_sentence,
 )
@@ -57,6 +59,76 @@ def build_parser() -> argparse.ArgumentParser:
     p_uninstall.add_argument("plugin", help=plugin_help)
     add_install_scope_arguments(p_uninstall)
     p_uninstall.set_defaults(handler=handle_uninstall, scope="global")
+
+    p_install_specific = sub.add_parser(
+        "install-specific",
+        help="Install one specific kind item for a provider.",
+    )
+    p_install_specific.add_argument(
+        "kind",
+        help="Item kind (agent, skill, or mcp-config).",
+    )
+    p_install_specific.add_argument("provider", help=provider_help)
+    p_install_specific.add_argument(
+        "identifier",
+        help=(
+            "Unique item identifier, optionally scoped as "
+            "'<plugin_id>:<identifier>' when names overlap."
+        ),
+    )
+    p_install_specific.add_argument(
+        "--repo",
+        help=(
+            "Path to a local agent-foundry repository root. "
+            "If omitted, install fetches the default git repository first."
+        ),
+    )
+    add_install_scope_arguments(p_install_specific)
+    p_install_specific.add_argument(
+        "--force",
+        action="store_true",
+        help=(
+            "Cursor CLI only: overwrite existing agent files in ~/.cursor/agents that "
+            "belong to another install or were not created by agent-foundry."
+        ),
+    )
+    p_install_specific.set_defaults(handler=handle_install_specific, scope="global")
+
+    p_uninstall_specific = sub.add_parser(
+        "uninstall-specific",
+        help="Remove one specific kind item for a provider.",
+    )
+    p_uninstall_specific.add_argument(
+        "kind",
+        help="Item kind (agent, skill, or mcp-config).",
+    )
+    p_uninstall_specific.add_argument("provider", help=provider_help)
+    p_uninstall_specific.add_argument(
+        "identifier",
+        help=(
+            "Unique item identifier, optionally scoped as "
+            "'<plugin_id>:<identifier>' when names overlap."
+        ),
+    )
+    p_uninstall_specific.add_argument(
+        "--repo",
+        help=(
+            "Path to a local agent-foundry repository root. "
+            "If omitted, install fetches the default git repository first."
+        ),
+    )
+    add_install_scope_arguments(p_uninstall_specific)
+    p_uninstall_specific.add_argument(
+        "--force",
+        action="store_true",
+        help=(
+            "Cursor CLI only: overwrite existing agent files in ~/.cursor/agents that "
+            "belong to another install or were not created by agent-foundry."
+        ),
+    )
+    p_uninstall_specific.set_defaults(
+        handler=handle_uninstall_specific, scope="global"
+    )
 
     p_validate = sub.add_parser(
         "validate-plugins",

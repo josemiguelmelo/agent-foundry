@@ -8,7 +8,10 @@ from agent_foundry.cli.exit_codes import (
     RUNTIME_FAILURE,
 )
 from agent_foundry.cli.handlers.common import run_with_errors
-from agent_foundry.cli.handlers.provider_common import run_provider_operation
+from agent_foundry.cli.handlers.provider_common import (
+    run_provider_operation,
+    run_provider_specific_operation,
+)
 from agent_foundry.plugin import ValidatePluginsService
 from agent_foundry.plugin.crud import CreatePluginService, RemovePluginService
 
@@ -19,6 +22,14 @@ def handle_install(args: argparse.Namespace) -> int:
 
 def handle_uninstall(args: argparse.Namespace) -> int:
     return run_provider_operation(args, uninstall=True)
+
+
+def handle_install_specific(args: argparse.Namespace) -> int:
+    return run_provider_specific_operation(args, uninstall=False)
+
+
+def handle_uninstall_specific(args: argparse.Namespace) -> int:
+    return run_provider_specific_operation(args, uninstall=True)
 
 
 def handle_create_plugin(args: argparse.Namespace) -> int:
