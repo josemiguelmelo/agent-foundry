@@ -25,11 +25,15 @@ Plugins live under [`plugins/`](plugins/) and are indexed in [`registry/plugins.
    agent-foundry install <provider> <plugin_id>
    agent-foundry install <provider> <plugin_id> --repo /path/to/agent-foundry
    agent-foundry uninstall <provider> <plugin_id>
+   agent-foundry install-specific <kind> <provider> <identifier>
+   agent-foundry uninstall-specific <kind> <provider> <identifier>
    ```
 
    Replace:
   - `<provider>` with one of: `claude`, `codex`, `copilot`, `cursor`, `cursor-cli`
-   - `<plugin_id>` with a plugin id from [`registry/plugins.yaml`](registry/plugins.yaml)
+  - `<plugin_id>` with a plugin id from [`registry/plugins.yaml`](registry/plugins.yaml)
+  - `<kind>` with one of: `agent`, `skill`, `mcp-config`
+  - `<identifier>` with the item name (for agents: stem or filename, for skills: skill folder name, for mcp-config: server id). Use `<plugin_id>:<identifier>` when names are ambiguous across plugins.
    - `--repo` (optional) with a local agent-foundry repository root when you want to install from a local checkout instead of the default git fetch
 
 By default, `install` tries to fetch the repository from GitHub first and resolves plugin paths from that clone. If fetch fails, it falls back to local registry discovery.
@@ -64,6 +68,12 @@ agent-foundry install codex <plugin_id> --in-project
 
 # Remove from project-local scope
 agent-foundry uninstall codex <plugin_id> --in-project
+
+# Install one skill directly
+agent-foundry install-specific skill cursor-cli git:commit --in-project
+
+# Remove one agent directly
+agent-foundry uninstall-specific agent cursor senior-ai-engineer
 ```
 
 | Provider | `--in-project` behavior |

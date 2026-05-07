@@ -13,6 +13,10 @@ from pathlib import Path
 
 from agent_foundry.core.errors import AgentFoundryError, UsageError
 from agent_foundry.installers import provider_names, resolve_provider
+from agent_foundry.installers.specific import (
+    materialized_specific_plugin,
+    resolve_specific_selection,
+)
 from agent_foundry.installers.types import InProjectBehavior, ProviderContext
 from agent_foundry.plugin.types import Plugin
 from agent_foundry.registry import resolve_plugin_dir
@@ -176,6 +180,64 @@ def run_provider_operation(
                 )
                 ops.install(ctx)
     except FileNotFoundError as e:
+        print(e, file=sys.stderr)
+        return USAGE_OR_VALIDATION
+    except (RuntimeError, AgentFoundryError) as e:
+        print(e, file=sys.stderr)
+        return RUNTIME_FAILURE
+    return SUCCESS
+
+
+def run_provider_specific_operation(
+    args: argparse.Namespace,
+    *,
+    uninstall: bool,
+) -> int:
+    try:
+        ops = resolve_provider(args.provider)
+    except ValueError as e:
+        print(e, file=sys.stderr)
+        return USAGE_OR_VALIDATION
+
+    in_project = getattr(args, "scope", "global") == "in_project"
+    try:
+        ops.validate_scope(in_project=in_project)
+    except UsageError as e:
+        print(e, file=sys.stderr)
+        return USAGE_OR_VALIDATION
+    if in_project and ops.capabilities.in_project == InProjectBehavior.IGNORED:
+        print(
+            f"Note: provider {ops.name!r} ignores --in-project and always uses user scope.",
+            file=sys.stderr,
+        )
+
+    force = bool(getattr(args, "force", False))
+
+    try:
+        with _install_repo_context(args):
+            selection = resolve_specific_selection(args.kind, args.identifier)
+            synthetic_plugin_id = selection.synthetic_plugin_id
+            if uninstall:
+                ctx = ProviderContext(
+                    plugin_id=synthetic_plugin_id,
+                    plugin_root=None,
+                    in_project=in_project,
+                    force=force,
+                )
+                ops.uninstall(ctx)
+            else:
+                with materialized_specific_plugin(selection) as plugin_root:
+                    ctx = ProviderContext(
+                        plugin_id=synthetic_plugin_id,
+                        plugin_root=plugin_root,
+                        in_project=in_project,
+                        force=force,
+                    )
+                    ops.install(ctx)
+    except FileNotFoundError as e:
+        print(e, file=sys.stderr)
+        return USAGE_OR_VALIDATION
+    except ValueError as e:
         print(e, file=sys.stderr)
         return USAGE_OR_VALIDATION
     except (RuntimeError, AgentFoundryError) as e:
