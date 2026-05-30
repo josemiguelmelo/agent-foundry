@@ -13,6 +13,7 @@ from agent_foundry.installers.cursor_cli_provider import (
     install_cursor_cli,
     uninstall_cursor_cli,
 )
+from agent_foundry.installers.source_paths import prepared_plugin_for_install
 from agent_foundry.installers.types import (
     AgentReferenceMode,
     InProjectBehavior,
@@ -20,6 +21,7 @@ from agent_foundry.installers.types import (
     ProviderContext,
     validate_scope_behavior,
 )
+from agent_foundry.registry.external import prepared_external_plugin_root
 
 PROVIDER_ALIASES: dict[str, str] = {
     "cursor_cli": "cursor-cli",
@@ -43,15 +45,22 @@ class Provider:
             raise RuntimeError(
                 f"Provider {self.name!r}: install requires plugin_root in context."
             )
-        if self.name in ("cursor-cli", "cursor"):
-            self.install_fn(
-                ctx.plugin_id,
-                ctx.plugin_root,
-                in_project=ctx.in_project,
-                force=ctx.force,
-            )
-        else:
-            self.install_fn(ctx.plugin_id, ctx.plugin_root, in_project=ctx.in_project)
+        with prepared_external_plugin_root(ctx.plugin_root) as ext_root:
+            with prepared_plugin_for_install(ext_root, ctx.source_path_overrides) as root:
+                plugin_root = root
+                if self.name in ("cursor-cli", "cursor"):
+                    self.install_fn(
+                        ctx.plugin_id,
+                        plugin_root,
+                        in_project=ctx.in_project,
+                        force=ctx.force,
+                    )
+                else:
+                    self.install_fn(
+                        ctx.plugin_id,
+                        plugin_root,
+                        in_project=ctx.in_project,
+                    )
 
     def uninstall(self, ctx: ProviderContext) -> None:
         self.uninstall_fn(ctx.plugin_id, in_project=ctx.in_project)

@@ -13,12 +13,18 @@ from pathlib import Path
 
 from agent_foundry.core.errors import AgentFoundryError, UsageError
 from agent_foundry.installers import provider_names, resolve_provider
+from agent_foundry.installers.source_paths import parse_path_overrides
+from agent_foundry.installers.selection import (
+    split_scoped_identifier,
+    synthetic_plugin_id_for_uninstall,
+)
 from agent_foundry.installers.specific import (
     materialized_specific_plugin,
     resolve_specific_selection,
 )
 from agent_foundry.installers.types import InProjectBehavior, ProviderContext
 from agent_foundry.plugin.types import Plugin
+from agent_foundry.utils.paths import install_base
 from agent_foundry.registry import resolve_plugin_dir
 from agent_foundry.registry.external import (
     LAYOUT_ENV,
@@ -27,7 +33,6 @@ from agent_foundry.registry.external import (
     is_external_repo,
     is_git_remote_url,
     is_registry_repo,
-    prepared_external_plugin_root,
     shallow_clone_repo,
 )
 
@@ -41,6 +46,31 @@ def providers_help_sentence() -> str:
     if len(names) == 1:
         return names[0]
     return ", ".join(names[:-1]) + f", or {names[-1]}"
+
+
+PATH_HELP = (
+    "Override manifest source root for a kind (repeatable). "
+    "Examples: skills:./vendor/skills, agents:./vendor/agents, "
+    "commands:./prompts, mcp:./config/mcp.json"
+)
+
+
+def add_path_arguments(p: argparse.ArgumentParser) -> None:
+    p.add_argument(
+        "--path",
+        action="append",
+        metavar="KIND:DIR",
+        dest="path_overrides",
+        help=PATH_HELP,
+    )
+
+
+def _source_path_overrides_from_args(args: argparse.Namespace) -> dict[str, list[str]] | None:
+    raw = getattr(args, "path_overrides", None)
+    try:
+        return parse_path_overrides(raw)
+    except UsageError as e:
+        raise e
 
 
 def add_install_scope_arguments(p: argparse.ArgumentParser) -> None:
@@ -165,6 +195,53 @@ def _install_repo_context(args: argparse.Namespace):
     yield
 
 
+def _specific_install_exists(
+    provider_name: str, plugin_id: str, *, in_project: bool
+) -> bool:
+    """Return True when a specific-item synthetic install is present for ``plugin_id``."""
+    base = install_base(in_project=in_project)
+    if provider_name == "codex":
+        return (base / ".codex" / "plugins" / plugin_id).exists()
+    if provider_name in ("cursor-cli", "cursor"):
+        from agent_foundry.installers.cursor_cli.state import state_path_for
+
+        anchor = Path.cwd().resolve() if in_project else None
+        return state_path_for(plugin_id, anchor).is_file()
+    if provider_name == "claude":
+        bundle = base / ".agent-foundry" / "claude-marketplace" / "local-bundle" / "plugins" / plugin_id
+        return bundle.exists()
+    if provider_name == "copilot":
+        return (base / ".github" / "plugins" / plugin_id).exists()
+    return False
+
+
+def _resolve_uninstall_synthetic_plugin_id(
+    args: argparse.Namespace,
+    *,
+    provider_name: str,
+    in_project: bool,
+    source_path_overrides: dict[str, list[str]] | None,
+) -> str:
+    scoped_plugin, _ = split_scoped_identifier(args.identifier)
+    if scoped_plugin:
+        return synthetic_plugin_id_for_uninstall(args.kind, args.identifier)
+
+    external_id = synthetic_plugin_id_for_uninstall(args.kind, args.identifier)
+    if _specific_install_exists(provider_name, external_id, in_project=in_project):
+        return external_id
+
+    try:
+        with _install_repo_context(args):
+            selection = resolve_specific_selection(
+                args.kind,
+                args.identifier,
+                source_path_overrides=source_path_overrides,
+            )
+            return selection.synthetic_plugin_id
+    except RuntimeError:
+        return external_id
+
+
 def _validate_plugin_id(plugin: str) -> int | None:
     try:
         Plugin.validate_id(plugin)
@@ -202,6 +279,11 @@ def run_provider_operation(
         )
 
     force = bool(getattr(args, "force", False))
+    try:
+        source_path_overrides = _source_path_overrides_from_args(args)
+    except UsageError as e:
+        print(e, file=sys.stderr)
+        return USAGE_OR_VALIDATION
 
     try:
         if uninstall and not getattr(args, "repo", None):
@@ -210,6 +292,7 @@ def run_provider_operation(
                 plugin_root=None,
                 in_project=in_project,
                 force=force,
+                source_path_overrides=source_path_overrides,
             )
             ops.uninstall(ctx)
         else:
@@ -220,20 +303,21 @@ def run_provider_operation(
                         plugin_root=None,
                         in_project=in_project,
                         force=force,
+                        source_path_overrides=source_path_overrides,
                     )
                     ops.uninstall(ctx)
                 else:
                     resolved = _ensure_resolved_plugin(args.plugin)
                     if isinstance(resolved, int):
                         return resolved
-                    with prepared_external_plugin_root(resolved) as plugin_root:
-                        ctx = ProviderContext(
-                            plugin_id=args.plugin,
-                            plugin_root=plugin_root,
-                            in_project=in_project,
-                            force=force,
-                        )
-                        ops.install(ctx)
+                    ctx = ProviderContext(
+                        plugin_id=args.plugin,
+                        plugin_root=resolved,
+                        in_project=in_project,
+                        force=force,
+                        source_path_overrides=source_path_overrides,
+                    )
+                    ops.install(ctx)
     except FileNotFoundError as e:
         print(e, file=sys.stderr)
         return USAGE_OR_VALIDATION
@@ -267,26 +351,43 @@ def run_provider_specific_operation(
         )
 
     force = bool(getattr(args, "force", False))
+    try:
+        source_path_overrides = _source_path_overrides_from_args(args)
+    except UsageError as e:
+        print(e, file=sys.stderr)
+        return USAGE_OR_VALIDATION
 
     try:
-        with _install_repo_context(args):
-            selection = resolve_specific_selection(args.kind, args.identifier)
-            synthetic_plugin_id = selection.synthetic_plugin_id
-            if uninstall:
-                ctx = ProviderContext(
-                    plugin_id=synthetic_plugin_id,
-                    plugin_root=None,
-                    in_project=in_project,
-                    force=force,
+        if uninstall:
+            synthetic_plugin_id = _resolve_uninstall_synthetic_plugin_id(
+                args,
+                provider_name=ops.name,
+                in_project=in_project,
+                source_path_overrides=source_path_overrides,
+            )
+            ctx = ProviderContext(
+                plugin_id=synthetic_plugin_id,
+                plugin_root=None,
+                in_project=in_project,
+                force=force,
+                source_path_overrides=None,
+            )
+            ops.uninstall(ctx)
+        else:
+            with _install_repo_context(args):
+                selection = resolve_specific_selection(
+                    args.kind,
+                    args.identifier,
+                    source_path_overrides=source_path_overrides,
                 )
-                ops.uninstall(ctx)
-            else:
+                synthetic_plugin_id = selection.synthetic_plugin_id
                 with materialized_specific_plugin(selection) as plugin_root:
                     ctx = ProviderContext(
                         plugin_id=synthetic_plugin_id,
                         plugin_root=plugin_root,
                         in_project=in_project,
                         force=force,
+                        source_path_overrides=None,
                     )
                     ops.install(ctx)
     except FileNotFoundError as e:

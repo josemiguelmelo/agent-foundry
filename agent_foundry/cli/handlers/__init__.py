@@ -11,11 +11,13 @@ from .plugin import (
 )
 from .provider_common import (
     add_install_scope_arguments,
+    add_path_arguments,
     providers_help_sentence,
 )
 
 __all__ = [
     "add_install_scope_arguments",
+    "add_path_arguments",
     "handle_create_plugin",
     "handle_install",
     "handle_install_specific",

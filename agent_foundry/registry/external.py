@@ -14,6 +14,7 @@ from typing import Iterator
 
 from agent_foundry.installers.cursor_cli.manifest import CURSOR_MANIFEST_SUBPATH
 from agent_foundry.installers.cursor_cli.rewrite import iter_agent_sources, iter_skill_package_dirs
+from agent_foundry.installers.source_paths import resolve_override_dir
 from agent_foundry.installers.selection import (
     SpecificSelection,
     normalize_kind,
@@ -161,12 +162,31 @@ def _agent_file_matches(path: Path, identifier: str) -> bool:
     return path.stem.lower() == needle or path.name.lower() == needle
 
 
+def _skills_search_root(
+    base: Path,
+    overrides: dict[str, list[str]] | None,
+) -> Path:
+    custom = resolve_override_dir(base, overrides, "skills")
+    return custom if custom is not None else base / "skills"
+
+
+def _agents_search_root(
+    base: Path,
+    overrides: dict[str, list[str]] | None,
+) -> Path:
+    custom = resolve_override_dir(base, overrides, "agents")
+    return custom if custom is not None else base / "agents"
+
+
 def _collect_root_skill_matches(
-    repo_root: Path, identifier: str
+    repo_root: Path,
+    identifier: str,
+    *,
+    source_path_overrides: dict[str, list[str]] | None = None,
 ) -> list[tuple[Path, str, str]]:
     """Return (source_path, resolved_id, source_plugin_id) for repo-root skills/."""
     out: list[tuple[Path, str, str]] = []
-    skills_root = repo_root / "skills"
+    skills_root = _skills_search_root(repo_root, source_path_overrides)
     if not skills_root.is_dir():
         return out
     for pkg in iter_skill_package_dirs(skills_root):
@@ -176,10 +196,13 @@ def _collect_root_skill_matches(
 
 
 def _collect_root_agent_matches(
-    repo_root: Path, identifier: str
+    repo_root: Path,
+    identifier: str,
+    *,
+    source_path_overrides: dict[str, list[str]] | None = None,
 ) -> list[tuple[Path, str, str]]:
     out: list[tuple[Path, str, str]] = []
-    agents_root = repo_root / "agents"
+    agents_root = _agents_search_root(repo_root, source_path_overrides)
     if not agents_root.is_dir():
         return out
     for src in iter_agent_sources(agents_root):
@@ -189,10 +212,14 @@ def _collect_root_agent_matches(
 
 
 def _collect_plugin_skill_matches(
-    plugin_root: Path, plugin_id: str, identifier: str
+    plugin_root: Path,
+    plugin_id: str,
+    identifier: str,
+    *,
+    source_path_overrides: dict[str, list[str]] | None = None,
 ) -> list[tuple[Path, str, str]]:
     out: list[tuple[Path, str, str]] = []
-    skills_root = plugin_root / "skills"
+    skills_root = _skills_search_root(plugin_root, source_path_overrides)
     if not skills_root.is_dir():
         return out
     for pkg in iter_skill_package_dirs(skills_root):
@@ -202,10 +229,14 @@ def _collect_plugin_skill_matches(
 
 
 def _collect_plugin_agent_matches(
-    plugin_root: Path, plugin_id: str, identifier: str
+    plugin_root: Path,
+    plugin_id: str,
+    identifier: str,
+    *,
+    source_path_overrides: dict[str, list[str]] | None = None,
 ) -> list[tuple[Path, str, str]]:
     out: list[tuple[Path, str, str]] = []
-    agents_root = plugin_root / "agents"
+    agents_root = _agents_search_root(plugin_root, source_path_overrides)
     if not agents_root.is_dir():
         return out
     for src in iter_agent_sources(agents_root):
@@ -226,7 +257,11 @@ def _iter_plugin_dirs(repo_root: Path) -> list[tuple[str, Path]]:
 
 
 def resolve_external_specific_selection(
-    repo_root: Path, kind: str, identifier: str
+    repo_root: Path,
+    kind: str,
+    identifier: str,
+    *,
+    source_path_overrides: dict[str, list[str]] | None = None,
 ) -> SpecificSelection:
     normalized_kind = normalize_kind(kind)
     if normalized_kind == "mcp_config":
@@ -246,31 +281,51 @@ def resolve_external_specific_selection(
             )
         if normalized_kind == "skill":
             raw_matches = _collect_plugin_skill_matches(
-                plugin_root, scoped_plugin, scoped_identifier
+                plugin_root,
+                scoped_plugin,
+                scoped_identifier,
+                source_path_overrides=source_path_overrides,
             )
         else:
             raw_matches = _collect_plugin_agent_matches(
-                plugin_root, scoped_plugin, scoped_identifier
+                plugin_root,
+                scoped_plugin,
+                scoped_identifier,
+                source_path_overrides=source_path_overrides,
             )
     else:
         if normalized_kind == "skill":
             raw_matches.extend(
-                _collect_root_skill_matches(repo_root, scoped_identifier)
+                _collect_root_skill_matches(
+                    repo_root,
+                    scoped_identifier,
+                    source_path_overrides=source_path_overrides,
+                )
             )
             for plugin_id, plugin_root in _iter_plugin_dirs(repo_root):
                 raw_matches.extend(
                     _collect_plugin_skill_matches(
-                        plugin_root, plugin_id, scoped_identifier
+                        plugin_root,
+                        plugin_id,
+                        scoped_identifier,
+                        source_path_overrides=source_path_overrides,
                     )
                 )
         else:
             raw_matches.extend(
-                _collect_root_agent_matches(repo_root, scoped_identifier)
+                _collect_root_agent_matches(
+                    repo_root,
+                    scoped_identifier,
+                    source_path_overrides=source_path_overrides,
+                )
             )
             for plugin_id, plugin_root in _iter_plugin_dirs(repo_root):
                 raw_matches.extend(
                     _collect_plugin_agent_matches(
-                        plugin_root, plugin_id, scoped_identifier
+                        plugin_root,
+                        plugin_id,
+                        scoped_identifier,
+                        source_path_overrides=source_path_overrides,
                     )
                 )
 

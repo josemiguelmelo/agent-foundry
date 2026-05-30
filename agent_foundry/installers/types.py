@@ -33,6 +33,7 @@ class ProviderContext:
     plugin_root: Path | None
     in_project: bool
     force: bool = False
+    source_path_overrides: dict[str, list[str]] | None = None
 
 
 class ProviderContract(Protocol):

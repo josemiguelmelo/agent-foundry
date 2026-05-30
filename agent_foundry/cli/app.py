@@ -6,6 +6,7 @@ import argparse
 
 from agent_foundry.cli.handlers import (
     add_install_scope_arguments,
+    add_path_arguments,
     handle_create_plugin,
     handle_install,
     handle_install_specific,
@@ -46,6 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_install.add_argument("plugin", help=plugin_help)
     p_install.add_argument("--repo", help=REPO_HELP)
     add_install_scope_arguments(p_install)
+    add_path_arguments(p_install)
     p_install.add_argument(
         "--force",
         action="store_true",
@@ -84,6 +86,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_install_specific.add_argument("--repo", help=REPO_HELP)
     add_install_scope_arguments(p_install_specific)
+    add_path_arguments(p_install_specific)
     p_install_specific.add_argument(
         "--force",
         action="store_true",

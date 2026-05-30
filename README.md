@@ -92,6 +92,24 @@ agent-foundry --help
 - Supported providers: `claude`, `codex`, `copilot`, `cursor`, `cursor-cli`
 - `cursor-cli` mirrors plugin skills and agents into Cursor CLI discovery paths (`~/.cursor/skills/` and `~/.cursor/agents/`) when using global scope
 
+## Source path overrides
+
+Use repeatable `--path <kind>:<dir>` on `install-plugin` and `install` to override where skills, agents, commands, or MCP configs are read **inside the plugin** (manifest source roots). Paths are relative to the plugin root unless absolute.
+
+```bash
+# Registry plugin with non-default layout
+agent-foundry install-plugin cursor-cli my-plugin \
+  --path skills:./vendor/skills \
+  --path agents:./vendor/agents
+
+# External repo: search skills under a custom directory
+agent-foundry install skill cursor-cli commit \
+  --repo /path/to/my-agents \
+  --path skills:./alt-skills
+```
+
+Supported kinds: `skills`, `agents`, `commands`, `mcp` (maps to manifest `mcpServers`). Uninstall does not require `--path` (install state tracks destinations).
+
 ## Scope
 
 - Default scope is `--global` (paths under your home directory)

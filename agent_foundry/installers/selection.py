@@ -27,9 +27,26 @@ class SpecificSelection:
 
     @property
     def synthetic_plugin_id(self) -> str:
-        return safe_plugin_id(
-            f"specific-{self.kind}-{self.source_plugin_id}-{self.resolved_identifier}"
+        return synthetic_plugin_id_for_uninstall(
+            self.kind,
+            self.resolved_identifier,
+            source_plugin_id=self.source_plugin_id,
         )
+
+
+def synthetic_plugin_id_for_uninstall(
+    kind: str,
+    identifier: str,
+    *,
+    source_plugin_id: str | None = None,
+) -> str:
+    """Return the provider plugin id used for a specific install/uninstall."""
+    normalized_kind = normalize_kind(kind)
+    scoped_plugin, resolved_identifier = split_scoped_identifier(identifier)
+    plugin_id = source_plugin_id or scoped_plugin or "external"
+    return safe_plugin_id(
+        f"specific-{normalized_kind}-{plugin_id}-{resolved_identifier}"
+    )
 
 
 def safe_plugin_id(value: str) -> str:
