@@ -3,89 +3,39 @@
 from __future__ import annotations
 
 import json
-import re
 import shutil
 import tempfile
 from contextlib import contextmanager
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
 from agent_foundry.installers.cursor_cli.manifest import (
-    load_cursor_plugin_manifest,
     manifest_path_values,
     resolve_from_plugin_root,
 )
+from agent_foundry.installers.source_paths import load_effective_manifest
 from agent_foundry.installers.cursor_cli.rewrite import (
     iter_agent_sources,
     iter_skill_package_dirs,
 )
+from agent_foundry.installers.selection import (
+    SpecificSelection,
+    normalize_kind,
+    split_scoped_identifier,
+)
 from agent_foundry.registry import find_registry_file, list_registry_plugins, repository_root
 
-_KIND_ALIASES = {
-    "agent": "agent",
-    "agents": "agent",
-    "skill": "skill",
-    "skills": "skill",
-    "mcp": "mcp_config",
-    "mcp-config": "mcp_config",
-    "mcp_config": "mcp_config",
-    "mcp-configs": "mcp_config",
-}
+# Re-export for existing imports.
+__all__ = ["SpecificSelection", "materialized_specific_plugin", "resolve_specific_selection"]
 
 
-@dataclass(frozen=True)
-class SpecificSelection:
-    kind: str
-    source_plugin_id: str
-    source_path: Path
-    resolved_identifier: str
-
-    @property
-    def synthetic_plugin_id(self) -> str:
-        return _safe_plugin_id(
-            f"specific-{self.kind}-{self.source_plugin_id}-{self.resolved_identifier}"
-        )
-
-
-def _safe_plugin_id(value: str) -> str:
-    slug = re.sub(r"[^a-z0-9-]+", "-", value.lower()).strip("-")
-    slug = re.sub(r"-{2,}", "-", slug)
-    if not slug:
-        slug = "specific-item"
-    if not slug[0].isalpha():
-        slug = f"s-{slug}"
-    if len(slug) == 1:
-        slug = f"{slug}x"
-    return slug[:64]
-
-
-def _normalize_kind(kind: str) -> str:
-    normalized = _KIND_ALIASES.get(kind.strip().lower())
-    if not normalized:
-        supported = ", ".join(sorted(set(_KIND_ALIASES.values())))
-        raise ValueError(f"Unknown kind {kind!r}. Supported kinds: {supported}.")
-    return normalized
-
-
-def _split_scoped_identifier(identifier: str) -> tuple[str | None, str]:
-    raw = identifier.strip()
-    if not raw:
-        raise ValueError("identifier cannot be empty.")
-    if ":" not in raw:
-        return None, raw
-    plugin_id, item_id = raw.split(":", 1)
-    plugin_id = plugin_id.strip()
-    item_id = item_id.strip()
-    if not plugin_id or not item_id:
-        raise ValueError(
-            "Scoped identifiers must look like '<plugin_id>:<identifier>'."
-        )
-    return plugin_id, item_id
-
-
-def _select_skill_matches(plugin_root: Path, identifier: str) -> list[tuple[Path, str]]:
-    manifest = load_cursor_plugin_manifest(plugin_root)
+def _select_skill_matches(
+    plugin_root: Path,
+    identifier: str,
+    *,
+    source_path_overrides: dict[str, list[str]] | None = None,
+) -> list[tuple[Path, str]]:
+    manifest = load_effective_manifest(plugin_root, source_path_overrides)
     roots = manifest_path_values(manifest.get("skills"))
     out: list[tuple[Path, str]] = []
     needle = identifier.strip().lower()
@@ -96,8 +46,13 @@ def _select_skill_matches(plugin_root: Path, identifier: str) -> list[tuple[Path
     return out
 
 
-def _select_agent_matches(plugin_root: Path, identifier: str) -> list[tuple[Path, str]]:
-    manifest = load_cursor_plugin_manifest(plugin_root)
+def _select_agent_matches(
+    plugin_root: Path,
+    identifier: str,
+    *,
+    source_path_overrides: dict[str, list[str]] | None = None,
+) -> list[tuple[Path, str]]:
+    manifest = load_effective_manifest(plugin_root, source_path_overrides)
     roots = manifest_path_values(manifest.get("agents"))
     out: list[tuple[Path, str]] = []
     needle = identifier.strip().lower()
@@ -109,9 +64,12 @@ def _select_agent_matches(plugin_root: Path, identifier: str) -> list[tuple[Path
 
 
 def _select_mcp_config_matches(
-    plugin_root: Path, identifier: str
+    plugin_root: Path,
+    identifier: str,
+    *,
+    source_path_overrides: dict[str, list[str]] | None = None,
 ) -> list[tuple[Path, str]]:
-    manifest = load_cursor_plugin_manifest(plugin_root)
+    manifest = load_effective_manifest(plugin_root, source_path_overrides)
     roots = manifest_path_values(manifest.get("mcpServers"))
     out: list[tuple[Path, str]] = []
     needle = identifier.strip().lower()
@@ -132,9 +90,28 @@ def _select_mcp_config_matches(
     return out
 
 
-def resolve_specific_selection(kind: str, identifier: str) -> SpecificSelection:
-    normalized_kind = _normalize_kind(kind)
-    scoped_plugin, scoped_identifier = _split_scoped_identifier(identifier)
+def resolve_specific_selection(
+    kind: str,
+    identifier: str,
+    *,
+    source_path_overrides: dict[str, list[str]] | None = None,
+) -> SpecificSelection:
+    from agent_foundry.registry.external import (
+        is_external_layout_active,
+        resolve_external_specific_selection,
+        repository_root_from_env,
+    )
+
+    if is_external_layout_active():
+        return resolve_external_specific_selection(
+            repository_root_from_env(),
+            kind,
+            identifier,
+            source_path_overrides=source_path_overrides,
+        )
+
+    normalized_kind = normalize_kind(kind)
+    scoped_plugin, scoped_identifier = split_scoped_identifier(identifier)
     matches: list[SpecificSelection] = []
 
     repo_root = repository_root(find_registry_file())
@@ -143,11 +120,23 @@ def resolve_specific_selection(kind: str, identifier: str) -> SpecificSelection:
             continue
         plugin_root = plugin.resolved_path(repo_root)
         if normalized_kind == "skill":
-            found = _select_skill_matches(plugin_root, scoped_identifier)
+            found = _select_skill_matches(
+                plugin_root,
+                scoped_identifier,
+                source_path_overrides=source_path_overrides,
+            )
         elif normalized_kind == "agent":
-            found = _select_agent_matches(plugin_root, scoped_identifier)
+            found = _select_agent_matches(
+                plugin_root,
+                scoped_identifier,
+                source_path_overrides=source_path_overrides,
+            )
         else:
-            found = _select_mcp_config_matches(plugin_root, scoped_identifier)
+            found = _select_mcp_config_matches(
+                plugin_root,
+                scoped_identifier,
+                source_path_overrides=source_path_overrides,
+            )
         for source_path, resolved_identifier in found:
             matches.append(
                 SpecificSelection(

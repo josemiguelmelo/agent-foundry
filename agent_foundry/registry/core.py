@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+
 from pathlib import Path
 from typing import Any
 
@@ -101,6 +102,15 @@ def get_registry_plugin(plugin_id: str) -> RegistryPlugin:
 
 
 def resolve_plugin_dir(plugin_id: str) -> Path:
+    from agent_foundry.registry.external import (
+        is_external_layout_active,
+        resolve_external_plugin_dir,
+        repository_root_from_env,
+    )
+
+    if is_external_layout_active():
+        return resolve_external_plugin_dir(repository_root_from_env(), plugin_id)
+
     entry = get_registry_plugin(plugin_id)
     repo_root = repository_root(find_registry_file())
     resolved = entry.resolved_path(repo_root)
