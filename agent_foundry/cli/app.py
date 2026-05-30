@@ -28,7 +28,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_install = sub.add_parser(
-        "install",
+        "install-plugin",
         help="Install a registry plugin for a provider.",
     )
     p_install.add_argument("provider", help=provider_help)
@@ -52,7 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_install.set_defaults(handler=handle_install, scope="global")
 
     p_uninstall = sub.add_parser(
-        "uninstall",
+        "uninstall-plugin",
         help="Remove a registry plugin installation for a provider.",
     )
     p_uninstall.add_argument("provider", help=provider_help)
@@ -61,7 +61,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_uninstall.set_defaults(handler=handle_uninstall, scope="global")
 
     p_install_specific = sub.add_parser(
-        "install-specific",
+        "install",
         help="Install one specific kind item for a provider.",
     )
     p_install_specific.add_argument(
@@ -95,7 +95,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_install_specific.set_defaults(handler=handle_install_specific, scope="global")
 
     p_uninstall_specific = sub.add_parser(
-        "uninstall-specific",
+        "uninstall",
         help="Remove one specific kind item for a provider.",
     )
     p_uninstall_specific.add_argument(

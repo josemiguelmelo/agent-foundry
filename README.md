@@ -22,11 +22,11 @@ Plugins live under [`plugins/`](plugins/) and are indexed in [`registry/plugins.
 2. Install or remove a plugin for a provider:
 
    ```bash
-   agent-foundry install <provider> <plugin_id>
-   agent-foundry install <provider> <plugin_id> --repo /path/to/agent-foundry
-   agent-foundry uninstall <provider> <plugin_id>
-   agent-foundry install-specific <kind> <provider> <identifier>
-   agent-foundry uninstall-specific <kind> <provider> <identifier>
+   agent-foundry install-plugin <provider> <plugin_id>
+   agent-foundry install-plugin <provider> <plugin_id> --repo /path/to/agent-foundry
+   agent-foundry uninstall-plugin <provider> <plugin_id>
+   agent-foundry install <kind> <provider> <identifier>
+   agent-foundry uninstall <kind> <provider> <identifier>
    ```
 
    Replace:
@@ -36,7 +36,7 @@ Plugins live under [`plugins/`](plugins/) and are indexed in [`registry/plugins.
   - `<identifier>` with the item name (for agents: stem or filename, for skills: skill folder name, for mcp-config: server id). Use `<plugin_id>:<identifier>` when names are ambiguous across plugins.
    - `--repo` (optional) with a local agent-foundry repository root when you want to install from a local checkout instead of the default git fetch
 
-By default, `install` tries to fetch the repository from GitHub first and resolves plugin paths from that clone. If fetch fails, it falls back to local registry discovery.
+By default, `install-plugin` tries to fetch the repository from GitHub first and resolves plugin paths from that clone. If fetch fails, it falls back to local registry discovery.
 
 # Usage
 
@@ -55,25 +55,25 @@ agent-foundry --help
 
 - Default scope is `--global` (paths under your home directory)
 - `--in-project` uses the current working directory as the root
-- Use the same scope for `install` and `uninstall`
+- Use the same scope for `install-plugin` and `uninstall-plugin`, and for `install` and `uninstall`
 
 Examples:
 
 ```bash
 # Global install (default)
-agent-foundry install codex <plugin_id>
+agent-foundry install-plugin codex <plugin_id>
 
 # Project-local install
-agent-foundry install codex <plugin_id> --in-project
+agent-foundry install-plugin codex <plugin_id> --in-project
 
 # Remove from project-local scope
-agent-foundry uninstall codex <plugin_id> --in-project
+agent-foundry uninstall-plugin codex <plugin_id> --in-project
 
 # Install one skill directly
-agent-foundry install-specific skill cursor-cli git:commit --in-project
+agent-foundry install skill cursor-cli git:commit --in-project
 
 # Remove one agent directly
-agent-foundry uninstall-specific agent cursor senior-ai-engineer
+agent-foundry uninstall agent cursor senior-ai-engineer
 ```
 
 | Provider | `--in-project` behavior |
