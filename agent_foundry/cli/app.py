@@ -17,9 +17,20 @@ from agent_foundry.cli.handlers import (
 )
 
 
+REPO_HELP = (
+    "Local repository root or git remote URL (HTTPS/SSH). "
+    "Registry checkouts use registry/plugins.yaml; external repos use "
+    "agents/, skills/, and plugins/ at the root. "
+    "If omitted, install fetches the default agent-foundry repository first."
+)
+
+
 def build_parser() -> argparse.ArgumentParser:
     provider_help = f"Target tool: {providers_help_sentence()}."
-    plugin_help = "Plugin id from registry/plugins.yaml (e.g. development)."
+    plugin_help = (
+        "Plugin id from registry/plugins.yaml, or directory name under plugins/ "
+        "for external repositories (e.g. my-plugin)."
+    )
 
     parser = argparse.ArgumentParser(
         prog="agent-foundry",
@@ -33,13 +44,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_install.add_argument("provider", help=provider_help)
     p_install.add_argument("plugin", help=plugin_help)
-    p_install.add_argument(
-        "--repo",
-        help=(
-            "Path to a local agent-foundry repository root. "
-            "If omitted, install fetches the default git repository first."
-        ),
-    )
+    p_install.add_argument("--repo", help=REPO_HELP)
     add_install_scope_arguments(p_install)
     p_install.add_argument(
         "--force",
@@ -57,6 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_uninstall.add_argument("provider", help=provider_help)
     p_uninstall.add_argument("plugin", help=plugin_help)
+    p_uninstall.add_argument("--repo", help=REPO_HELP)
     add_install_scope_arguments(p_uninstall)
     p_uninstall.set_defaults(handler=handle_uninstall, scope="global")
 
@@ -76,13 +82,7 @@ def build_parser() -> argparse.ArgumentParser:
             "'<plugin_id>:<identifier>' when names overlap."
         ),
     )
-    p_install_specific.add_argument(
-        "--repo",
-        help=(
-            "Path to a local agent-foundry repository root. "
-            "If omitted, install fetches the default git repository first."
-        ),
-    )
+    p_install_specific.add_argument("--repo", help=REPO_HELP)
     add_install_scope_arguments(p_install_specific)
     p_install_specific.add_argument(
         "--force",
@@ -110,13 +110,7 @@ def build_parser() -> argparse.ArgumentParser:
             "'<plugin_id>:<identifier>' when names overlap."
         ),
     )
-    p_uninstall_specific.add_argument(
-        "--repo",
-        help=(
-            "Path to a local agent-foundry repository root. "
-            "If omitted, install fetches the default git repository first."
-        ),
-    )
+    p_uninstall_specific.add_argument("--repo", help=REPO_HELP)
     add_install_scope_arguments(p_uninstall_specific)
     p_uninstall_specific.add_argument(
         "--force",
