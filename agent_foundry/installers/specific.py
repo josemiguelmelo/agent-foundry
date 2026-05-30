@@ -133,6 +133,17 @@ def _select_mcp_config_matches(
 
 
 def resolve_specific_selection(kind: str, identifier: str) -> SpecificSelection:
+    from agent_foundry.registry.external import (
+        is_external_layout_active,
+        resolve_external_specific_selection,
+        repository_root_from_env,
+    )
+
+    if is_external_layout_active():
+        return resolve_external_specific_selection(
+            repository_root_from_env(), kind, identifier
+        )
+
     normalized_kind = _normalize_kind(kind)
     scoped_plugin, scoped_identifier = _split_scoped_identifier(identifier)
     matches: list[SpecificSelection] = []
