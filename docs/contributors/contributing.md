@@ -1,6 +1,8 @@
-# Contributing to agent-foundry
+# Contributing
 
 Thanks for helping improve **agent-foundry** — the CLI for installing registry-defined plugins into Codex, Claude Code, Cursor (IDE and CLI), and Copilot CLI.
+
+Full documentation is published at [josemiguelmelo.github.io/agent-foundry](https://josemiguelmelo.github.io/agent-foundry/).
 
 ## Development setup
 
@@ -19,10 +21,10 @@ Optional: install [pipx](https://pipx.pypa.io/) to exercise the published instal
 
 If you use Cursor, GitHub Copilot, Claude Code, or other coding agents on this repo:
 
-- **[`AGENTS.md`](AGENTS.md)** — canonical project context (architecture, commands, boundaries)
-- **[`.cursor/rules/`](.cursor/rules/)** — Cursor rules (always-on + path-scoped)
-- **[`.github/copilot-instructions.md`](.github/copilot-instructions.md)** and **[`.github/instructions/`](.github/instructions/)** — Copilot repo-wide and path-specific rules
-- **[`CLAUDE.md`](CLAUDE.md)** — imports `AGENTS.md` for Claude Code
+- **`AGENTS.md`** — canonical project context (architecture, commands, boundaries)
+- **`.cursor/rules/`** — Cursor rules (always-on + path-scoped)
+- **`.github/copilot-instructions.md`** and **`.github/instructions/`** — Copilot repo-wide and path-specific rules
+- **`CLAUDE.md`** — imports `AGENTS.md` for Claude Code
 
 Update `AGENTS.md` when conventions change; keep tool-specific files short and pointing to it.
 
@@ -30,10 +32,10 @@ Update `AGENTS.md` when conventions change; keep tool-specific files short and p
 
 | Area | Location | Notes |
 | --- | --- | --- |
-| Registry plugins | [`plugins/`](plugins/), [`registry/plugins.yaml`](registry/plugins.yaml) | Skills, agents, commands, MCP configs for end users |
-| CLI and installers | [`agent_foundry/`](agent_foundry/) | Provider adapters, install/uninstall logic, validation |
-| Tests | [`tests/`](tests/) | Unit tests; add coverage for new behavior |
-| Docs | [`docs/`](docs/), `README.md`, plugin `README.md` files | Keep usage examples in sync with the CLI; site at [josemiguelmelo.github.io/agent-foundry](https://josemiguelmelo.github.io/agent-foundry/) |
+| Registry plugins | `plugins/`, `registry/plugins.yaml` | Skills, agents, commands, MCP configs for end users |
+| CLI and installers | `agent_foundry/` | Provider adapters, install/uninstall logic, validation |
+| Tests | `tests/` | Unit tests; add coverage for new behavior |
+| Docs | `docs/`, `README.md`, plugin READMEs | Keep usage examples in sync with the CLI |
 
 ## Adding or updating a plugin
 
@@ -51,7 +53,7 @@ Update `AGENTS.md` when conventions change; keep tool-specific files short and p
    - Commands: `commands/<command-name>.md` (where supported)
    - Provider manifests: `.cursor-plugin/`, `.claude-plugin/`, `.codex-plugin/`, `plugin.json`, etc.
 
-3. **Register** the plugin in [`registry/plugins.yaml`](registry/plugins.yaml) if `create-plugin` did not already add an entry (it usually does).
+3. **Register** the plugin in `registry/plugins.yaml` if `create-plugin` did not already add an entry (it usually does).
 
 4. **Validate** before opening a PR:
 
@@ -65,11 +67,11 @@ Update `AGENTS.md` when conventions change; keep tool-specific files short and p
    agent-foundry remove-plugin <plugin_id>
    ```
 
-See existing plugins such as [`plugins/git/`](plugins/git/) for layout and manifest patterns.
+See [Plugin development](plugin-development.md) and existing plugins such as `plugins/git/` for layout patterns.
 
 ## Working on the CLI
 
-- Entry point: [`agent_foundry/cli/app.py`](agent_foundry/cli/app.py)
+- Entry point: `agent_foundry/cli/app.py`
 - Run the full unit suite:
 
   ```bash
@@ -83,7 +85,7 @@ See existing plugins such as [`plugins/git/`](plugins/git/) for layout and manif
   vulture agent_foundry tests --min-confidence 100
   ```
 
-- Optional end-to-end smoke: [`scripts/e2e-cli.sh`](scripts/e2e-cli.sh) (see [`e2e.md`](e2e.md))
+- Optional end-to-end smoke: `scripts/e2e-cli.sh` (see `e2e.md`)
 
 ## Documentation site
 
@@ -100,13 +102,11 @@ Build with strict link checking:
 mkdocs build --strict
 ```
 
-Published at [josemiguelmelo.github.io/agent-foundry](https://josemiguelmelo.github.io/agent-foundry/).
-
 ## Pull requests
 
 1. Branch from `main` using a clear prefix, e.g. `docs/add-contributing`, `feat/my-feature`, `fix/issue-description`.
 2. Keep changes focused; one logical concern per PR when possible.
-3. Fill out [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) — especially plugin/registry impact and validation checkboxes.
+3. Fill out `.github/PULL_REQUEST_TEMPLATE.md` — especially plugin/registry impact and validation checkboxes.
 4. Ensure CI passes:
    - `agent-foundry validate-plugins`
    - Unit tests
@@ -128,4 +128,14 @@ Example: `docs: add CONTRIBUTING guide for plugins and PR workflow`
 
 ## License
 
-By contributing, you agree that your contributions are licensed under the same terms as the project: [Apache-2.0](LICENSE).
+By contributing, you agree that your contributions are licensed under the same terms as the project: Apache-2.0.
+
+<div class="af-related" markdown="1">
+
+## Related
+
+- [Plugin development](plugin-development.md)
+- [Architecture](architecture.md)
+- [CLI reference](../user/cli-reference.md)
+
+</div>

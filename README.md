@@ -1,162 +1,43 @@
 # agent-foundry
 
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://josemiguelmelo.github.io/agent-foundry/)
+
 `agent-foundry` is a CLI for installing registry-defined plugins into Codex, Claude Code, Cursor (IDE and CLI), and Copilot CLI.
 
-Plugins live under [`plugins/`](plugins/) and are indexed in [`registry/plugins.yaml`](registry/plugins.yaml).
+**Full documentation:** [josemiguelmelo.github.io/agent-foundry](https://josemiguelmelo.github.io/agent-foundry/)
 
-# Quickstart
+## Quick install
 
-## Prerequisites
-
-- Python 3.10+
-- [pipx](https://pipx.pypa.io/)
-
-## Installation via CLI
-
-1. Install the CLI:
-
-   ```bash
-   pipx install git+https://github.com/josemiguelmelo/agent-foundry.git
-   ```
-
-2. Install or remove a plugin for a provider:
-
-   ```bash
-   agent-foundry install-plugin <provider> <plugin_id>
-   agent-foundry install-plugin <provider> <plugin_id> --repo /path/to/agent-foundry
-   agent-foundry uninstall-plugin <provider> <plugin_id>
-   agent-foundry install <kind> <provider> <identifier>
-   agent-foundry uninstall <kind> <provider> <identifier>
-   ```
-
-   Replace:
-  - `<provider>` with one of: `claude`, `codex`, `copilot`, `cursor`, `cursor-cli`
-  - `<plugin_id>` with a plugin id from [`registry/plugins.yaml`](registry/plugins.yaml)
-  - `<kind>` with one of: `agent`, `skill`, `mcp-config`
-  - `<identifier>` with the item name (for agents: stem or filename, for skills: skill folder name, for mcp-config: server id). Use `<plugin_id>:<identifier>` when names are ambiguous across plugins.
-   - `--repo` (optional) with a **local path** or **git remote URL** (HTTPS/SSH) when installing from a custom repository instead of the default fetch
-
-By default, `install-plugin` tries to fetch the repository from GitHub first and resolves plugin paths from that clone. If fetch fails, it falls back to local registry discovery.
-
-## External git repositories
-
-`--repo` accepts a git remote URL or a local directory that follows this layout (no `registry/plugins.yaml` required):
-
-```
-repo-root/
-  agents/
-    senior-reviewer.md
-  skills/
-    commit/
-      SKILL.md
-  plugins/
-    my-plugin/
-      agents/
-        plugin-agent.md
-      skills/
-        plugin-skill/
-          SKILL.md
-```
-
-Examples (replace the URL with your repository):
+**Prerequisites:** Python 3.10+, [pipx](https://pipx.pypa.io/)
 
 ```bash
-# Standalone skill from repo root
-agent-foundry install skill cursor-cli commit --repo https://github.com/org/my-agents.git
-
-# Standalone agent from repo root
-agent-foundry install agent cursor-cli senior-reviewer --repo https://github.com/org/my-agents.git
-
-# Full plugin directory under plugins/
-agent-foundry install-plugin cursor-cli my-plugin --repo https://github.com/org/my-agents.git
-
-# Skill inside a plugin (scoped identifier)
-agent-foundry install skill cursor-cli my-plugin:plugin-skill --repo https://github.com/org/my-agents.git
-
-# Agent inside a plugin
-agent-foundry install agent cursor-cli my-plugin:plugin-agent --repo https://github.com/org/my-agents.git
+pipx install git+https://github.com/josemiguelmelo/agent-foundry.git
 ```
 
-For a full agent-foundry checkout (with `registry/plugins.yaml`), `--repo` continues to use registry-based plugin lookup. Private repositories use your existing git credentials; ref/tag pinning is not supported yet.
-
-# Usage
-
-Use this command to see available options at any time:
+## Quick example
 
 ```bash
-agent-foundry --help
-```
+# Install the git workflow plugin for Cursor CLI
+agent-foundry install-plugin cursor-cli git
 
-## Providers
-
-- Supported providers: `claude`, `codex`, `copilot`, `cursor`, `cursor-cli`
-- `cursor-cli` mirrors plugin skills and agents into Cursor CLI discovery paths (`~/.cursor/skills/` and `~/.cursor/agents/`) when using global scope
-
-## Source path overrides
-
-Use repeatable `--path <kind>:<dir>` on `install-plugin` and `install` to override where skills, agents, commands, or MCP configs are read **inside the plugin** (manifest source roots). Paths are relative to the plugin root unless absolute.
-
-```bash
-# Registry plugin with non-default layout
-agent-foundry install-plugin cursor-cli my-plugin \
-  --path skills:./vendor/skills \
-  --path agents:./vendor/agents
-
-# External repo: search skills under a custom directory
-agent-foundry install skill cursor-cli commit \
-  --repo /path/to/my-agents \
-  --path skills:./alt-skills
-```
-
-Supported kinds: `skills`, `agents`, `commands`, `mcp` (maps to manifest `mcpServers`). Uninstall does not require `--path` (install state tracks destinations).
-
-## Scope
-
-- Default scope is `--global` (paths under your home directory)
-- `--in-project` uses the current working directory as the root
-- Use the same scope for `install-plugin` and `uninstall-plugin`, and for `install` and `uninstall`
-
-Examples:
-
-```bash
-# Global install (default)
-agent-foundry install-plugin codex <plugin_id>
-
-# Project-local install
-agent-foundry install-plugin codex <plugin_id> --in-project
-
-# Remove from project-local scope
-agent-foundry uninstall-plugin codex <plugin_id> --in-project
-
-# Install one skill directly
+# Install one skill into the current project
 agent-foundry install skill cursor-cli git:commit --in-project
-
-# Remove one agent directly
-agent-foundry uninstall agent cursor senior-ai-engineer
 ```
 
-| Provider | `--in-project` behavior |
+Plugins are indexed in [`registry/plugins.yaml`](registry/plugins.yaml). See the [plugin catalog](https://josemiguelmelo.github.io/agent-foundry/plugins/) for available bundles.
+
+## Documentation
+
+| Topic | Link |
 | --- | --- |
-| `cursor` | Same as `cursor-cli`: `./.cursor/skills/`, `./.cursor/agents/`, state under `./.agent-foundry/cursor-cli/` (the IDE does not load `./.cursor/plugins/local/` in projects) |
-| `cursor-cli` | `./.cursor/` plus state under `./.agent-foundry/cursor-cli/` |
-| `codex` | `./.codex/plugins/` and `./.agents/plugins/marketplace.json` |
-| `copilot` | Mirrors plugin kinds into project paths: `./.github/skills/`, `./.github/agents/`, and `./.claude/commands/` |
-| `claude` | No effect — installs stay under `~/.agent-foundry/...` |
+| Getting started | [docs](https://josemiguelmelo.github.io/agent-foundry/user/getting-started/) |
+| CLI reference | [docs](https://josemiguelmelo.github.io/agent-foundry/user/cli-reference/) |
+| Providers & scope | [docs](https://josemiguelmelo.github.io/agent-foundry/user/providers/) |
+| External repositories | [docs](https://josemiguelmelo.github.io/agent-foundry/user/external-repos/) |
+| Plugin catalog | [docs](https://josemiguelmelo.github.io/agent-foundry/plugins/) |
+| Contributing | [docs](https://josemiguelmelo.github.io/agent-foundry/contributors/contributing/) |
 
-## Repository Commands
-
-Run from the repository root with the CLI available:
-
-```bash
-agent-foundry validate-plugins
-agent-foundry create-plugin <plugin_id> [--version 0.1.0] [--summary "…"]
-agent-foundry remove-plugin <plugin_id>
-```
-
-- `create-plugin` requires lowercase kebab-case plugin ids
-- `remove-plugin` deletes `plugins/<plugin_id>/` and its registry entry (it does not uninstall from Codex/Claude/etc.)
-
-# Contribution
+## Contribution
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md). AI agents: see [`AGENTS.md`](AGENTS.md).
 
