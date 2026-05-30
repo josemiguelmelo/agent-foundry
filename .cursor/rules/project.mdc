@@ -1,0 +1,27 @@
+---
+description: Core agent-foundry context — read AGENTS.md before implementing
+alwaysApply: true
+---
+
+# agent-foundry project
+
+Read [AGENTS.md](AGENTS.md) first for architecture, commands, and boundaries.
+
+## Repo map
+
+- `agent_foundry/` — CLI, installers, validation
+- `plugins/` + `registry/plugins.yaml` — distributable plugins
+- `tests/` — `unittest` suite
+
+## Before opening a PR
+
+```bash
+pip install -e .
+agent-foundry validate-plugins
+python -m unittest discover -s tests -p "test_*.py"
+vulture agent_foundry tests --min-confidence 100
+```
+
+Keep diffs focused. Use Conventional Commits. Fill `.github/PULL_REQUEST_TEMPLATE.md`.
+
+Human workflow: [CONTRIBUTING.md](CONTRIBUTING.md).
