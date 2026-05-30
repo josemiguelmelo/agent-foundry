@@ -14,12 +14,12 @@ from typing import Iterator
 
 from agent_foundry.installers.cursor_cli.manifest import CURSOR_MANIFEST_SUBPATH
 from agent_foundry.installers.cursor_cli.rewrite import iter_agent_sources, iter_skill_package_dirs
-from agent_foundry.installers.specific import (
+from agent_foundry.installers.selection import (
     SpecificSelection,
-    _normalize_kind,
-    _split_scoped_identifier,
+    normalize_kind,
+    split_scoped_identifier,
 )
-from agent_foundry.registry.core import REGISTRY_REL
+_REGISTRY_REL = Path("registry") / "plugins.yaml"
 
 LAYOUT_ENV = "AGENT_FOUNDRY_LAYOUT"
 LAYOUT_EXTERNAL = "external"
@@ -70,7 +70,7 @@ def shallow_clone_repo(url: str, *, dest: Path) -> Path:
 
 
 def is_registry_repo(root: Path) -> bool:
-    return (root.resolve() / REGISTRY_REL).is_file()
+    return (root.resolve() / _REGISTRY_REL).is_file()
 
 
 def is_external_repo(root: Path) -> bool:
@@ -228,13 +228,13 @@ def _iter_plugin_dirs(repo_root: Path) -> list[tuple[str, Path]]:
 def resolve_external_specific_selection(
     repo_root: Path, kind: str, identifier: str
 ) -> SpecificSelection:
-    normalized_kind = _normalize_kind(kind)
+    normalized_kind = normalize_kind(kind)
     if normalized_kind == "mcp_config":
         raise RuntimeError(
             "MCP config install is not supported from external repository layout."
         )
 
-    scoped_plugin, scoped_identifier = _split_scoped_identifier(identifier)
+    scoped_plugin, scoped_identifier = split_scoped_identifier(identifier)
     repo_root = repo_root.resolve()
     raw_matches: list[tuple[Path, str, str]] = []
 

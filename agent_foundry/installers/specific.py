@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import json
-import re
 import shutil
 import tempfile
 from contextlib import contextmanager
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
@@ -20,68 +18,15 @@ from agent_foundry.installers.cursor_cli.rewrite import (
     iter_agent_sources,
     iter_skill_package_dirs,
 )
+from agent_foundry.installers.selection import (
+    SpecificSelection,
+    normalize_kind,
+    split_scoped_identifier,
+)
 from agent_foundry.registry import find_registry_file, list_registry_plugins, repository_root
 
-_KIND_ALIASES = {
-    "agent": "agent",
-    "agents": "agent",
-    "skill": "skill",
-    "skills": "skill",
-    "mcp": "mcp_config",
-    "mcp-config": "mcp_config",
-    "mcp_config": "mcp_config",
-    "mcp-configs": "mcp_config",
-}
-
-
-@dataclass(frozen=True)
-class SpecificSelection:
-    kind: str
-    source_plugin_id: str
-    source_path: Path
-    resolved_identifier: str
-
-    @property
-    def synthetic_plugin_id(self) -> str:
-        return _safe_plugin_id(
-            f"specific-{self.kind}-{self.source_plugin_id}-{self.resolved_identifier}"
-        )
-
-
-def _safe_plugin_id(value: str) -> str:
-    slug = re.sub(r"[^a-z0-9-]+", "-", value.lower()).strip("-")
-    slug = re.sub(r"-{2,}", "-", slug)
-    if not slug:
-        slug = "specific-item"
-    if not slug[0].isalpha():
-        slug = f"s-{slug}"
-    if len(slug) == 1:
-        slug = f"{slug}x"
-    return slug[:64]
-
-
-def _normalize_kind(kind: str) -> str:
-    normalized = _KIND_ALIASES.get(kind.strip().lower())
-    if not normalized:
-        supported = ", ".join(sorted(set(_KIND_ALIASES.values())))
-        raise ValueError(f"Unknown kind {kind!r}. Supported kinds: {supported}.")
-    return normalized
-
-
-def _split_scoped_identifier(identifier: str) -> tuple[str | None, str]:
-    raw = identifier.strip()
-    if not raw:
-        raise ValueError("identifier cannot be empty.")
-    if ":" not in raw:
-        return None, raw
-    plugin_id, item_id = raw.split(":", 1)
-    plugin_id = plugin_id.strip()
-    item_id = item_id.strip()
-    if not plugin_id or not item_id:
-        raise ValueError(
-            "Scoped identifiers must look like '<plugin_id>:<identifier>'."
-        )
-    return plugin_id, item_id
+# Re-export for existing imports.
+__all__ = ["SpecificSelection", "materialized_specific_plugin", "resolve_specific_selection"]
 
 
 def _select_skill_matches(plugin_root: Path, identifier: str) -> list[tuple[Path, str]]:
@@ -144,8 +89,8 @@ def resolve_specific_selection(kind: str, identifier: str) -> SpecificSelection:
             repository_root_from_env(), kind, identifier
         )
 
-    normalized_kind = _normalize_kind(kind)
-    scoped_plugin, scoped_identifier = _split_scoped_identifier(identifier)
+    normalized_kind = normalize_kind(kind)
+    scoped_plugin, scoped_identifier = split_scoped_identifier(identifier)
     matches: list[SpecificSelection] = []
 
     repo_root = repository_root(find_registry_file())
