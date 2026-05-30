@@ -1,0 +1,84 @@
+site_name: agent-foundry
+site_url: https://josemiguelmelo.github.io/agent-foundry/
+repo_url: https://github.com/josemiguelmelo/agent-foundry
+repo_name: josemiguelmelo/agent-foundry
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.instant
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - toc.integrate
+    - toc.follow
+  palette:
+    - scheme: default
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/josemiguelmelo/agent-foundry
+  generator: false
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+nav:
+  - Home: index.md
+  - User Guide:
+    - Getting Started: user/getting-started.md
+    - Installation: user/installation.md
+    - CLI Reference: user/cli-reference.md
+    - Providers: user/providers.md
+    - Scope: user/scope.md
+    - External Repositories: user/external-repos.md
+    - Source Path Overrides: user/source-paths.md
+  - Plugins:
+    - Catalog: plugins/index.md
+    - git: plugins/git.md
+    - software-development-agents: plugins/software-development-agents.md
+    - project-management: plugins/project-management.md
+  - Contributors:
+    - Contributing: contributors/contributing.md
+    - Plugin Development: contributors/plugin-development.md
+    - Architecture: contributors/architecture.md
+
+strict: true
