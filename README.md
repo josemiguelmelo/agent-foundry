@@ -34,9 +34,50 @@ Plugins live under [`plugins/`](plugins/) and are indexed in [`registry/plugins.
   - `<plugin_id>` with a plugin id from [`registry/plugins.yaml`](registry/plugins.yaml)
   - `<kind>` with one of: `agent`, `skill`, `mcp-config`
   - `<identifier>` with the item name (for agents: stem or filename, for skills: skill folder name, for mcp-config: server id). Use `<plugin_id>:<identifier>` when names are ambiguous across plugins.
-   - `--repo` (optional) with a local agent-foundry repository root when you want to install from a local checkout instead of the default git fetch
+   - `--repo` (optional) with a **local path** or **git remote URL** (HTTPS/SSH) when installing from a custom repository instead of the default fetch
 
 By default, `install-plugin` tries to fetch the repository from GitHub first and resolves plugin paths from that clone. If fetch fails, it falls back to local registry discovery.
+
+## External git repositories
+
+`--repo` accepts a git remote URL or a local directory that follows this layout (no `registry/plugins.yaml` required):
+
+```
+repo-root/
+  agents/
+    senior-reviewer.md
+  skills/
+    commit/
+      SKILL.md
+  plugins/
+    my-plugin/
+      agents/
+        plugin-agent.md
+      skills/
+        plugin-skill/
+          SKILL.md
+```
+
+Examples (replace the URL with your repository):
+
+```bash
+# Standalone skill from repo root
+agent-foundry install skill cursor-cli commit --repo https://github.com/org/my-agents.git
+
+# Standalone agent from repo root
+agent-foundry install agent cursor-cli senior-reviewer --repo https://github.com/org/my-agents.git
+
+# Full plugin directory under plugins/
+agent-foundry install-plugin cursor-cli my-plugin --repo https://github.com/org/my-agents.git
+
+# Skill inside a plugin (scoped identifier)
+agent-foundry install skill cursor-cli my-plugin:plugin-skill --repo https://github.com/org/my-agents.git
+
+# Agent inside a plugin
+agent-foundry install agent cursor-cli my-plugin:plugin-agent --repo https://github.com/org/my-agents.git
+```
+
+For a full agent-foundry checkout (with `registry/plugins.yaml`), `--repo` continues to use registry-based plugin lookup. Private repositories use your existing git credentials; ref/tag pinning is not supported yet.
 
 # Usage
 
