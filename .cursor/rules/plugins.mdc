@@ -1,0 +1,33 @@
+---
+description: Registry plugin bundle layout and validation
+globs: plugins/**,registry/**
+alwaysApply: false
+---
+
+# Plugins (`plugins/`, `registry/`)
+
+Full context: [AGENTS.md](AGENTS.md).
+
+## Layout
+
+- Registry row in `registry/plugins.yaml` (id, path, version, summary)
+- Plugin root: `.agentic/plugin.yaml` — `name` and `version` must match registry
+- Skills: `skills/<name>/SKILL.md` with YAML frontmatter
+- Agents: `agents/<name>.md` with YAML frontmatter
+- Provider manifests: `plugin.json`, `.cursor-plugin/`, `.claude-plugin/`, `.codex-plugin/`
+
+## Workflow
+
+```bash
+agent-foundry create-plugin <plugin_id>   # lowercase kebab-case
+# edit bundle, then:
+agent-foundry validate-plugins
+```
+
+Reference: `plugins/git/`. `remove-plugin` only mutates this repo, not user installs.
+
+## Checklist
+
+- [ ] Plugin id is lowercase kebab-case
+- [ ] Manifest version matches `registry/plugins.yaml`
+- [ ] `validate-plugins` passes before PR

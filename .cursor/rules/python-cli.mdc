@@ -1,0 +1,28 @@
+---
+description: Python CLI and installer conventions for agent_foundry
+globs: agent_foundry/**/*.py,tests/**/*.py
+alwaysApply: false
+---
+
+# Python CLI (`agent_foundry/`, `tests/`)
+
+Full context: [AGENTS.md](AGENTS.md).
+
+## Patterns
+
+- Entry: `agent_foundry/cli/app.py` — add subcommands via argparse handlers under `cli/handlers/`
+- New provider behavior → new or extend `installers/*_provider.py`; share logic in `installers/common.py`, `selection.py`, `source_paths.py`
+- Registry: `registry/repository.py`, `registry/core.py`
+- Validation: `plugin/validation/rules.py` — extend rules there, not ad hoc checks in CLI
+
+## Tests
+
+- Use `unittest` (`python -m unittest discover -s tests -p "test_*.py"`)
+- Add tests for installer/CLI behavior changes; fixtures under `tests/fixtures/`
+- CI runs `vulture agent_foundry tests --min-confidence 100` — remove dead code you introduce
+
+## Style
+
+- Match existing module layout and typing style
+- Prefer small, focused functions over new abstraction layers
+- No secrets in code or tests

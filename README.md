@@ -158,6 +158,6 @@ agent-foundry remove-plugin <plugin_id>
 
 # Contribution
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). AI agents: see [`AGENTS.md`](AGENTS.md).
 
 Licensed under Apache-2.0 — [`LICENSE`](LICENSE).

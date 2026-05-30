@@ -15,6 +15,17 @@ agent-foundry --help
 
 Optional: install [pipx](https://pipx.pypa.io/) to exercise the published install path (`pipx install -e .`).
 
+## AI-assisted development
+
+If you use Cursor, GitHub Copilot, Claude Code, or other coding agents on this repo:
+
+- **[`AGENTS.md`](AGENTS.md)** — canonical project context (architecture, commands, boundaries)
+- **[`.cursor/rules/`](.cursor/rules/)** — Cursor rules (always-on + path-scoped)
+- **[`.github/copilot-instructions.md`](.github/copilot-instructions.md)** and **[`.github/instructions/`](.github/instructions/)** — Copilot repo-wide and path-specific rules
+- **[`CLAUDE.md`](CLAUDE.md)** — imports `AGENTS.md` for Claude Code
+
+Update `AGENTS.md` when conventions change; keep tool-specific files short and pointing to it.
+
 ## What to contribute
 
 | Area | Location | Notes |
