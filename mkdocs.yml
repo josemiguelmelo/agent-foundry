@@ -66,6 +66,7 @@ nav:
   - User Guide:
     - Getting Started: user/getting-started.md
     - Installation: user/installation.md
+    - Staying up to date: user/updates.md
     - CLI Reference: user/cli-reference.md
     - Providers: user/providers.md
     - Scope: user/scope.md
@@ -78,6 +79,7 @@ nav:
     - project-management: plugins/project-management.md
   - Contributors:
     - Contributing: contributors/contributing.md
+    - Releasing: contributors/releasing.md
     - Plugin Development: contributors/plugin-development.md
     - Architecture: contributors/architecture.md
 

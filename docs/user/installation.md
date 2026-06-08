@@ -8,7 +8,10 @@ The recommended install path uses [pipx](https://pipx.pypa.io/) so the CLI is is
 
 ```bash
 pipx install git+https://github.com/josemiguelmelo/agent-foundry.git
+agent-foundry --version
 ```
+
+To upgrade later or subscribe to release notifications, see [Staying up to date](updates.md).
 
 For local development from a checkout:
 
@@ -68,6 +71,7 @@ Use the same scope for install and uninstall operations. See [Scope](scope.md) f
 ## Related
 
 - [Getting started](getting-started.md)
+- [Staying up to date](updates.md)
 - [CLI reference](cli-reference.md)
 - [Source path overrides](source-paths.md)
 

@@ -5,6 +5,15 @@ Run `agent-foundry --help` at any time for the latest option list.
 !!! tip "Quick help"
     Every command below accepts `--help`. Example: `agent-foundry install-plugin --help`
 
+## Global options
+
+| Flag | Description |
+| --- | --- |
+| `--version` | Print the installed CLI version and exit. |
+| `--help` | Show command help and exit. |
+
+When you run a subcommand, agent-foundry may print a one-line update hint if a newer GitHub release exists. See [Staying up to date](updates.md) to upgrade or disable the check (`AGENT_FOUNDRY_NO_UPDATE_CHECK=1`).
+
 ## Providers
 
 All install and uninstall commands require a `<provider>`:
@@ -188,6 +197,7 @@ These commands are intended for contributors working in the agent-foundry reposi
 ## Related
 
 - [Installation](installation.md)
+- [Staying up to date](updates.md)
 - [External repositories](external-repos.md)
 - [Contributing](../contributors/contributing.md)
 

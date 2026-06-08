@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 
+from agent_foundry.cli.update_check import installed_version, maybe_emit_update_notice
 from agent_foundry.cli.handlers import (
     add_install_scope_arguments,
     add_path_arguments,
@@ -36,6 +37,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agent-foundry",
         description="Install, validate, scaffold, or manage agent-foundry registry plugins.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {installed_version()}",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -173,5 +179,6 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
+    maybe_emit_update_notice()
     code = args.handler(args)
     raise SystemExit(code)

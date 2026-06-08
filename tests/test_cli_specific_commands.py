@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import patch
 
 from agent_foundry.cli.app import build_parser
 
@@ -48,6 +49,16 @@ class TestCliSpecificCommands(unittest.TestCase):
         self.assertEqual(args.provider, "cursor-cli")
         self.assertEqual(args.plugin, "git")
         self.assertEqual(args.scope, "in_project")
+
+    def test_version_flag(self) -> None:
+        parser = build_parser()
+        with patch(
+            "agent_foundry.cli.app.installed_version",
+            return_value="1.0.0",
+        ):
+            with self.assertRaises(SystemExit) as ctx:
+                parser.parse_args(["--version"])
+        self.assertEqual(ctx.exception.code, 0)
 
 
 if __name__ == "__main__":

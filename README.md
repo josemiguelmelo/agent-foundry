@@ -1,6 +1,7 @@
 # agent-foundry
 
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://josemiguelmelo.github.io/agent-foundry/)
+[![GitHub Release](https://img.shields.io/github/v/release/josemiguelmelo/agent-foundry)](https://github.com/josemiguelmelo/agent-foundry/releases)
 
 `agent-foundry` is a CLI for installing registry-defined plugins into Codex, Claude Code, Cursor (IDE and CLI), and Copilot CLI.
 
@@ -31,6 +32,7 @@ Plugins are indexed in [`registry/plugins.yaml`](registry/plugins.yaml). See the
 | Topic | Link |
 | --- | --- |
 | Getting started | [docs](https://josemiguelmelo.github.io/agent-foundry/user/getting-started/) |
+| Staying up to date | [docs](https://josemiguelmelo.github.io/agent-foundry/user/updates/) |
 | CLI reference | [docs](https://josemiguelmelo.github.io/agent-foundry/user/cli-reference/) |
 | Providers & scope | [docs](https://josemiguelmelo.github.io/agent-foundry/user/providers/) |
 | External repositories | [docs](https://josemiguelmelo.github.io/agent-foundry/user/external-repos/) |
