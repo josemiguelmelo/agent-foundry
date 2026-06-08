@@ -22,6 +22,7 @@ Verify the install:
 
 ```bash
 agent-foundry --help
+agent-foundry --version
 ```
 
 ## Install your first plugin
@@ -55,6 +56,7 @@ See [Providers](providers.md) for install-path details and [Scope](scope.md) for
 ## Next steps
 
 - [Installation](installation.md) — pipx, `--repo`, and external git repositories
+- [Staying up to date](updates.md) — release notifications and upgrades
 - [CLI Reference](cli-reference.md) — all subcommands and flags
 - [Plugin catalog](../plugins/index.md) — browse available plugins
 - [External repositories](external-repos.md) — install from your own git repo
