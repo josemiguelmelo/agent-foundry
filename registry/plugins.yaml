@@ -16,3 +16,7 @@ plugins:
     path: plugins/project-management
     version: 1.0.0
     summary: Project management skills for structured issues and tasks with markdown templates
+  - id: devops
+    path: plugins/devops
+    version: 1.0.0
+    summary: DevOps agent plus infrastructure-as-code review and CI/CD pipeline skills

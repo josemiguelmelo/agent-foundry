@@ -77,6 +77,7 @@ nav:
     - git: plugins/git.md
     - software-development-agents: plugins/software-development-agents.md
     - project-management: plugins/project-management.md
+    - devops: plugins/devops.md
   - Contributors:
     - Contributing: contributors/contributing.md
     - Releasing: contributors/releasing.md

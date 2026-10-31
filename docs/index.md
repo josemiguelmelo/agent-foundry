@@ -168,7 +168,7 @@ agent-foundry install skill cursor-cli git:commit --in-project
 
     ---
 
-    git, software-development-agents, project-management, and more.
+    git, software-development-agents, project-management, devops, and more.
 
     [Browse plugins :octicons-arrow-right-24:](plugins/index.md)
 
