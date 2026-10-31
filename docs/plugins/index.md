@@ -9,6 +9,7 @@ The central registry at `registry/plugins.yaml` indexes all distributable plugin
 | [git](git.md) | 0.1.0 | Git workflow plugin with skills for commit quality, branch creation, and PR opening |
 | [software-development-agents](software-development-agents.md) | 1.0.0 | Multi-role software development team agents with per-project memory |
 | [project-management](project-management.md) | 1.0.0 | Project management skills for structured issues and tasks with markdown templates |
+| [devops](devops.md) | 1.0.0 | DevOps agent plus infrastructure-as-code review and CI/CD pipeline skills |
 
 ## Install a plugin
 

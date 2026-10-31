@@ -1,0 +1,22 @@
+{
+  "name": "devops",
+  "version": "1.0.0",
+  "description": "DevOps plugin with a senior DevOps engineer agent plus infrastructure-as-code and CI/CD pipeline skills.",
+  "author": {
+    "name": "agent-foundry"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "devops",
+    "infrastructure-as-code",
+    "terraform",
+    "kubernetes",
+    "ci-cd",
+    "pipelines",
+    "sre",
+    "agent-foundry"
+  ],
+  "agents": "./agents",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}
